@@ -2,140 +2,167 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Global Admin OS v7.0 - User-Friendly Input System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Admin Master OS v9.0</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --navy: #0a192f; --gold: #c5a059; --bg: #1e1e1e; --paper: #fff; }
-        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; background: var(--bg); display: flex; height: 100vh; color: #fff; overflow: hidden; }
-        
-        /* 왼쪽 입력창 */
-        .sidebar { width: 480px; background: #111; padding: 25px; overflow-y: auto; border-right: 2px solid var(--gold); }
-        .sidebar h2 { color: var(--gold); border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.4em; }
-        .input-card { background: #252525; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; }
-        .group { margin-bottom: 12px; }
-        label { display: block; font-size: 11px; color: var(--gold); margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
-        input, textarea, select { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #444; background: #1a1a1a; color: #fff; font-size: 13px; box-sizing: border-box; }
-        textarea { resize: vertical; min-height: 100px; line-height: 1.5; }
-        
-        /* 오른쪽 미리보기 */
-        .preview-area { flex: 1; padding: 40px; overflow-y: auto; display: flex; justify-content: center; background: #333; }
-        .paper { width: 210mm; min-height: 297mm; background: var(--paper); color: #000; padding: 25mm 20mm; box-shadow: 0 0 40px rgba(0,0,0,0.8); position: relative; box-sizing: border-box; }
-
-        /* 공문서 스타일 레이아웃 */
-        .doc-header { text-align: center; font-weight: bold; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 30px; font-size: 32px; letter-spacing: 5px; }
-        .meta-info { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 15px; }
-        .meta-info td { padding: 8px 0; border-bottom: 1px solid #eee; }
-        .content-body { line-height: 1.8; text-align: justify; min-height: 550px; white-space: pre-wrap; font-size: 16px; margin-bottom: 40px; }
-        
-        /* 직인 */
-        #seal-canvas { position: absolute; right: 50px; bottom: 100px; width: 90px; height: 90px; opacity: 0.85; transform: rotate(-5deg); pointer-events: none; }
-        
-        .footer-sign { text-align: center; font-weight: bold; font-size: 24px; border-top: 2px solid #000; padding-top: 20px; }
-        .bottom-meta { margin-top: 40px; font-size: 12px; color: #666; display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 10px; }
-        
-        /* 버튼 */
-        .btn-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .btn { padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.3s; }
-        .btn-save { background: var(--gold); color: #000; }
-        .btn-print { position: fixed; bottom: 30px; right: 30px; padding: 15px 35px; background: var(--gold); color: #000; border-radius: 50px; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
-
-        @media print { .sidebar, .btn-print { display: none; } .preview-area { padding: 0; background: none; } .paper { box-shadow: none; width: 100%; margin: 0; } }
+        @media print { .no-print { display: none !important; } .print-area { padding: 0 !important; margin: 0 !important; box-shadow: none !important; } }
+        body { background-color: #1e1e1e; font-family: 'Malgun Gothic', sans-serif; }
+        .style-paper { width: 210mm; min-height: 297mm; background: white; color: black; padding: 25mm 20mm; position: relative; box-sizing: border-box; }
+        .doc-header { text-align: center; font-weight: bold; border-bottom: 3px double black; padding-bottom: 10px; margin-bottom: 30px; font-size: 32px; letter-spacing: 5px; }
+        .content-body { line-height: 1.8; text-align: justify; min-height: 550px; white-space: pre-wrap; font-size: 16px; }
+        #seal-canvas { position: absolute; right: 60px; bottom: 100px; width: 90px; height: 90px; opacity: 0.8; transform: rotate(-5deg); pointer-events: none; }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>ADMIN SYSTEM v7.0</h2>
-        
-        <div class="input-card">
-            <label>1. 문서 기본 설정</label>
-            <div class="group"><select id="lSel" onchange="u()"><option value="ko">한국어 (Korean)</option><option value="en">English</option><option value="cn">中文 (Chinese)</option></select></div>
-            <div class="group"><select id="tSel" onchange="applyTemplate()"><option value="normal">일반 공문</option><option value="initial">최초 보고</option><option value="interim">중간 보고</option><option value="final">최종 보고</option><option value="urgent">긴급 공문</option></select></div>
-        </div>
+    <div id="root"></div>
 
-        <div class="input-card">
-            <label>2. 문서 내용 작성</label>
-            <div class="group"><input type="text" id="i0" placeholder="발신 기관명 (예: 대한연구소)" oninput="u(); drawSeal();"></div>
-            <div class="group"><input type="text" id="i1" placeholder="수신자 (예: 홍길동 귀하)" oninput="u()"></div>
-            <div class="group"><input type="text" id="i2" placeholder="문서 제목" oninput="u()"></div>
-            <div class="group"><textarea id="i3" placeholder="본문 내용을 적어주세요. 표는 자동으로 생성됩니다." oninput="u()"></textarea></div>
-            <div class="group"><input type="text" id="i4" placeholder="발신인 직함/성명" oninput="u()"></div>
-        </div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef, createContext, useContext } = React;
 
-        <div class="btn-box">
-            <button class="btn btn-save" onclick="saveData()">데이터 저장 (.json)</button>
-            <button class="btn" style="background:#444; color:#fff;" onclick="document.getElementById('f-data').click()">불러오기</button>
-            <input type="file" id="f-data" accept=".json" style="display:none;" onchange="loadData(event)">
-        </div>
-        <p style="font-size: 11px; color: #666; margin-top: 15px; text-align: center;">* 모든 데이터는 브라우저 내에서만 처리되며 서버에 저장되지 않습니다.</p>
-    </div>
+        // --- Mock Components for React Architecture ---
+        const ThemeContext = createContext();
+        const ThemeProvider = ({ children, defaultTheme }) => (
+            <ThemeContext.Provider value={{ theme: defaultTheme }}>
+                <div className={defaultTheme === 'dark' ? 'dark' : ''}>{children}</div>
+            </ThemeContext.Provider>
+        );
 
-    <div class="preview-area">
-        <div class="paper" id="p-doc">
-            <div class="doc-header" id="o0">발 신 기 관</div>
-            <table class="meta-info">
-                <tr><td width="80"><b>수 신 :</b></td><td id="o1"></td></tr>
-                <tr><td><b>제 목 :</b></td><td id="o2" style="font-weight:bold;"></td></tr>
-            </table>
-            <div class="content-body" id="o3"></div>
-            <canvas id="seal-canvas" width="200" height="200"></canvas>
-            <div class="footer-sign" id="o4">발신인 명의</div>
-            <div class="bottom-meta">
-                <div>일자: <span id="o-date"></span></div>
-                <div>기안자: 사용자 | 보안등급: 일반</div>
-            </div>
-        </div>
-    </div>
+        const ErrorBoundary = ({ children }) => {
+            try { return <>{children}</>; } 
+            catch (e) { return <div className="p-10 text-white">시스템 오류가 발생했습니다.</div>; }
+        };
 
-    <button class="btn btn-print" onclick="window.print()">공문서 인쇄 / PDF 저장</button>
+        const TooltipProvider = ({ children }) => <div>{children}</div>;
+        const Toaster = () => <div className="no-print"></div>;
 
-    <script>
-        function drawSeal() {
-            const canvas = document.getElementById('seal-canvas');
-            const ctx = canvas.getContext('2d');
-            const name = document.getElementById('i0').value || "직인";
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = "red"; ctx.lineWidth = 8;
-            ctx.strokeRect(20, 20, 160, 160);
-            ctx.fillStyle = "red"; ctx.font = "bold 40px 'Gungsuh', serif"; ctx.textAlign = "center";
-            ctx.fillText(name.substring(0,2), 100, 85); ctx.fillText(name.substring(2,4) || "인", 100, 145);
-        }
+        // --- Home Component (Admin OS) ---
+        const Home = () => {
+            const [data, setData] = useState({
+                org: '대한혁신연구소', recipient: '', title: '', content: '', signatory: '', stage: 'normal'
+            });
+            const canvasRef = useRef(null);
 
-        function u() {
-            document.getElementById('o0').innerText = document.getElementById('i0').value || "발 신 기 관";
-            document.getElementById('o1').innerText = document.getElementById('i1').value;
-            document.getElementById('o2').innerText = document.getElementById('i2').value;
-            document.getElementById('o3').innerText = document.getElementById('i3').value;
-            document.getElementById('o4').innerText = document.getElementById('i4').value || "발신인 명의";
-        }
-
-        function applyTemplate() {
-            const t = document.getElementById('tSel').value;
             const samples = {
-                initial: "1. 추진 배경 및 목적\n- 시장 경쟁력 강화를 위한 신규 프로젝트 기안\n\n2. 주요 사업 내용\n- 서비스 인프라 구축 및 초기 마케팅 전략 수립\n\n3. 기대 효과\n- 브랜드 인지도 향상 및 고객 기반 확보",
-                interim: "1. 현재 진행 상황\n- 전체 로드맵 대비 50% 진행 완료\n\n2. 주요 이슈 및 해결 방안\n- 인력 충원을 통한 개발 속도 가속화\n\n3. 향후 일정\n- 다음 달 중 베타 테스트 실시 예정",
-                final: "1. 사업 결과 보고\n- 목표 대비 성과 120% 달성\n\n2. 예산 집행 현황\n- 예산 범위 내 효율적 집행 완료\n\n3. 종합 결론\n- 프로젝트 성공에 따른 후속 확산 사업 제안",
-                urgent: "[긴급 공지]\n\n현재 시스템 긴급 점검이 필요합니다.\n관련 부서는 즉시 협조 바랍니다.\n\n- 일시: 현재 시각부터 복구 완료 시까지",
+                initial: "1. 추진 배경: 글로벌 시장 변화 대응\n2. 주요 목적: 신규 비즈니스 인프라 구축\n3. 검토 사항: 초기 예산 편성 및 인력 충원안",
+                interim: "1. 진행 현황: 1단계 개발 완료 및 테스트 진행 중\n2. 주요 지표: 목표 대비 105% 달성\n3. 향후 계획: 보안 패치 및 사용자 교육",
+                final: "1. 사업 결과: 전사 시스템 통합 완료\n2. 기대 효과: 연간 비용 20% 절감 예상\n3. 종합 결론: 본 사업의 성공적 종료 보고",
+                urgent: "[긴급 조치]\n시스템 보안 위협 감지에 따른 전 사원 비밀번호 초기화 요망.\n일시: 현재 시각부로 즉시 시행",
                 normal: "상기 건과 관련하여 다음과 같이 보고합니다."
             };
-            document.getElementById('i3').value = samples[t];
-            u();
+
+            const drawSeal = () => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const name = data.org || "직인";
+                ctx.clearRect(0, 0, 200, 200);
+                ctx.strokeStyle = "red"; ctx.lineWidth = 8; ctx.strokeRect(20, 20, 160, 160);
+                ctx.fillStyle = "red"; ctx.font = "bold 40px 'Gungsuh', serif"; ctx.textAlign = "center";
+                ctx.fillText(name.substring(0,2), 100, 85); ctx.fillText(name.substring(2,4) || "인", 100, 145);
+            };
+
+            useEffect(() => { drawSeal(); }, [data.org]);
+
+            const applyTemplate = (e) => {
+                const stage = e.target.value;
+                setData({ ...data, stage, content: samples[stage] });
+            };
+
+            return (
+                <div className="flex h-screen overflow-hidden">
+                    {/* Sidebar */}
+                    <div className="w-[450px] bg-[#111] p-6 overflow-y-auto border-r-2 border-[#c5a059] no-print">
+                        <h2 className="text-[#c5a059] text-xl font-bold mb-6 border-b-2 border-[#c5a059] pb-2">ADMIN MASTER OS</h2>
+                        
+                        <div className="mb-6 space-y-4">
+                            <div>
+                                <label className="text-xs text-[#c5a059] font-bold block mb-1">보고 단계 선택</label>
+                                <select className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white" 
+                                        onChange={applyTemplate} value={data.stage}>
+                                    <option value="normal">일반 공문</option>
+                                    <option value="initial">최초 보고</option>
+                                    <option value="interim">중간 보고</option>
+                                    <option value="final">최종 보고</option>
+                                    <option value="urgent">긴급 공문</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label className="text-xs text-[#c5a059] font-bold block mb-1">기관 및 수신자</label>
+                                <input className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white mb-2" 
+                                       placeholder="발신 기관명" value={data.org} onChange={e => setData({...data, org: e.target.value})} />
+                                <input className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white" 
+                                       placeholder="수신자 (예: 홍길동 귀하)" onChange={e => setData({...data, recipient: e.target.value})} />
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-[#c5a059] font-bold block mb-1">본문 내용 (작성 시 미리보기 자동 반영)</label>
+                                <input className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white mb-2" 
+                                       placeholder="문서 제목" value={data.title} onChange={e => setData({...data, title: e.target.value})} />
+                                <textarea className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white h-60" 
+                                          value={data.content} onChange={e => setData({...data, content: e.target.value})} />
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-[#c5a059] font-bold block mb-1">발신인 서명</label>
+                                <input className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white" 
+                                       placeholder="직함 및 성명" onChange={e => setData({...data, signatory: e.target.value})} />
+                            </div>
+                        </div>
+
+                        <button className="w-full bg-[#c5a059] text-black font-bold py-3 rounded-lg hover:bg-yellow-600 transition"
+                                onClick={() => window.print()}>
+                            공문서 PDF 저장 / 인쇄
+                        </button>
+                    </div>
+
+                    {/* Preview Area */}
+                    <div className="flex-1 bg-[#333] p-10 overflow-y-auto flex justify-center print-area">
+                        <div className="style-paper shadow-2xl">
+                            <div className="doc-header">{data.org}</div>
+                            <div className="mb-8 text-lg">
+                                <p><b>수 신 :</b> {data.recipient}</p>
+                                <p><b>제 목 :</b> <span className="font-bold">{data.stage !== 'normal' ? `[${data.stage.toUpperCase()}] ` : ''}{data.title}</span></p>
+                            </div>
+                            <div className="content-body">{data.content}</div>
+                            
+                            {/* 자동 생성 직인 */}
+                            <canvas ref={canvasRef} width="200" height="200" id="seal-canvas"></canvas>
+                            
+                            <div className="text-center text-2xl font-bold border-t-2 border-black pt-4 mt-20">
+                                {data.signatory || '발신인 명의'}
+                            </div>
+                            <div className="mt-10 text-xs text-gray-500 flex justify-between border-t pt-2">
+                                <span>발행 일자: {new Date().toLocaleDateString()}</span>
+                                <span>문서번호: 2026-HQ-{Math.floor(Math.random()*9000)+1000}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- App Integration ---
+        function App() {
+            return (
+                <ErrorBoundary>
+                    <ThemeProvider defaultTheme="dark">
+                        <TooltipProvider>
+                            <Toaster />
+                            <Home />
+                        </TooltipProvider>
+                    </ThemeProvider>
+                </ErrorBoundary>
+            );
         }
 
-        function saveData() {
-            const d = {}; for(let i=0; i<=4; i++) d['i'+i] = document.getElementById('i'+i).value;
-            const b = new Blob([JSON.stringify(d)], {type:'application/json'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'admin_doc.json'; a.click();
-        }
-
-        function loadData(e) {
-            const r = new FileReader(); r.onload = () => {
-                const d = JSON.parse(r.target.result);
-                for(let i=0; i<=4; i++) document.getElementById('i'+i).value = d['i'+i] || "";
-                u(); drawSeal();
-            }; r.readAsText(e.target.files[0]);
-        }
-
-        document.getElementById('o-date').innerText = new Date().toLocaleDateString();
-        window.onload = () => { drawSeal(); applyTemplate(); };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
