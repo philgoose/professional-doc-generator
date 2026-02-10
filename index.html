@@ -3,166 +3,755 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Admin Master OS v9.0</title>
+    <title>ProDoc Engine • Enterprise Document Automation</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Archivo+Black&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        @media print { .no-print { display: none !important; } .print-area { padding: 0 !important; margin: 0 !important; box-shadow: none !important; } }
-        body { background-color: #1e1e1e; font-family: 'Malgun Gothic', sans-serif; }
-        .style-paper { width: 210mm; min-height: 297mm; background: white; color: black; padding: 25mm 20mm; position: relative; box-sizing: border-box; }
-        .doc-header { text-align: center; font-weight: bold; border-bottom: 3px double black; padding-bottom: 10px; margin-bottom: 30px; font-size: 32px; letter-spacing: 5px; }
-        .content-body { line-height: 1.8; text-align: justify; min-height: 550px; white-space: pre-wrap; font-size: 16px; }
-        #seal-canvas { position: absolute; right: 60px; bottom: 100px; width: 90px; height: 90px; opacity: 0.8; transform: rotate(-5deg); pointer-events: none; }
+        @page { size: A4; margin: 0; }
+        @media print { 
+            .no-print { display: none !important; } 
+            .print-area { padding: 0 !important; margin: 0 !important; }
+            body { background: white !important; }
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #0a0e14;
+            color: #d4d4d4;
+            font-family: 'JetBrains Mono', monospace;
+            overflow: hidden;
+        }
+
+        .neo-glow {
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+        }
+
+        .gradient-border {
+            position: relative;
+            background: linear-gradient(135deg, #0a0e14 0%, #151b24 100%);
+        }
+        
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 2px;
+            background: linear-gradient(135deg, #22d3ee, #8b5cf6);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .document-canvas {
+            width: 210mm;
+            min-height: 297mm;
+            background: #ffffff;
+            color: #1a1a1a;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .display { font-family: 'Archivo Black', sans-serif; }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(34, 211, 238, 0.95);
+            color: #0a0e14;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            animation: slideIn 0.3s ease-out;
+            z-index: 9999;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(34, 211, 238, 0.6); }
+        }
+
+        .status-indicator {
+            animation: pulse-glow 2s infinite;
+        }
+
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0e14; }
+        ::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+
+        /* 선택 텍스트 */
+        ::selection { background: #22d3ee; color: #0a0e14; }
+
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef, createContext, useContext } = React;
+        const { useState, useEffect, useRef, useMemo, useCallback, useReducer } = React;
 
-        // --- Mock Components for React Architecture ---
-        const ThemeContext = createContext();
-        const ThemeProvider = ({ children, defaultTheme }) => (
-            <ThemeContext.Provider value={{ theme: defaultTheme }}>
-                <div className={defaultTheme === 'dark' ? 'dark' : ''}>{children}</div>
-            </ThemeContext.Provider>
-        );
+        // ═══════════════════════════════════════════════════════════════
+        // 🎯 CONSTANTS & CONFIGURATION
+        // ═══════════════════════════════════════════════════════════════
 
-        const ErrorBoundary = ({ children }) => {
-            try { return <>{children}</>; } 
-            catch (e) { return <div className="p-10 text-white">시스템 오류가 발생했습니다.</div>; }
+        const TEMPLATES = {
+            LECTURE_CURRICULUM: {
+                id: 'LECTURE_CURRICULUM',
+                name: '강의 커리큘럼',
+                icon: '📚',
+                category: 'education',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'course_code', 'duration'],
+                defaultContent: `## 고급 시스템 아키텍처 설계\n\n### 1주차: 분산 시스템 기초\n- CAP 정리와 실무 적용\n- 마이크로서비스 패턴\n- 이벤트 드리븐 아키텍처\n\n### 2주차: 성능 최적화\n- 캐싱 전략 (Redis, CDN)\n- 데이터베이스 샤딩\n- 로드 밸런싱 설계\n\n### 3주차: 보안 아키텍처\n- OAuth 2.0 / OIDC\n- API 게이트웨이 보안\n- 제로 트러스트 모델\n\n### 4주차: 클라우드 네이티브\n- Kubernetes 오케스트레이션\n- 서버리스 아키텍처\n- GitOps 파이프라인`
+            },
+            CODE_REVIEW: {
+                id: 'CODE_REVIEW',
+                name: '코드 리뷰 보고서',
+                icon: '🔍',
+                category: 'engineering',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'severity', 'reviewed_by'],
+                defaultContent: `## 코드 품질 감사 결과\n\n### 🔴 Critical Issues\n- **메모리 누수**: UserService.ts L.245 - 이벤트 리스너 정리 누락\n- **SQL 인젝션 취약점**: api/search.ts - 파라미터 검증 부재\n\n### 🟡 Performance Concerns\n- N+1 쿼리 발생: Product 목록 조회 시 개별 쿼리 실행\n- 불필요한 재렌더링: React.memo() 미적용\n\n### ✅ Best Practices\n- TypeScript strict 모드 활성화\n- 단위 테스트 커버리지 85%\n- ESLint 규칙 준수\n\n### 📋 Action Items\n1. 보안 취약점 즉시 패치 (P0)\n2. 성능 최적화 스프린트 계획 (P1)\n3. 코드 스타일 가이드 문서화 (P2)`
+            },
+            CERTIFICATE: {
+                id: 'CERTIFICATE',
+                name: '수료증',
+                icon: '🏆',
+                category: 'education',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'issue_date', 'cert_number'],
+                defaultContent: `본 증서는 아래 명시된 수료자가 규정된 교육 과정을 성공적으로 이수하였음을 증명합니다.\n\n이수자는 해당 분야의 이론적 지식과 실무 역량을 충분히 갖추었으며, 전문가로서의 자질을 인정받았습니다.\n\n교육 내용:\n- 시스템 아키텍처 설계 원리\n- 대규모 트래픽 처리 기술\n- 보안 및 성능 최적화\n- 실전 프로젝트 설계 및 구현`
+            },
+            TECHNICAL_SPEC: {
+                id: 'TECHNICAL_SPEC',
+                name: '기술 명세서',
+                icon: '⚙️',
+                category: 'engineering',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'version', 'api_version'],
+                defaultContent: `## API 명세서 v2.0\n\n### 인증 엔드포인트\n**POST** /api/v2/auth/login\n\`\`\`json\n{\n  "email": "user@example.com",\n  "password": "***",\n  "mfa_token": "123456"\n}\n\`\`\`\n\nResponse: 200 OK\n\`\`\`json\n{\n  "access_token": "eyJ...",\n  "refresh_token": "eyJ...",\n  "expires_in": 3600\n}\n\`\`\`\n\n### 사용자 리소스\n**GET** /api/v2/users/{id}\n\nHeaders:\n- Authorization: Bearer {token}\n- X-API-Version: 2.0\n\n**Rate Limit**: 1000 req/hour`
+            },
+            PROJECT_PROPOSAL: {
+                id: 'PROJECT_PROPOSAL',
+                name: '프로젝트 제안서',
+                icon: '💼',
+                category: 'business',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'budget', 'timeline'],
+                defaultContent: `## 프로젝트 개요\n\n본 제안서는 차세대 클라우드 기반 협업 플랫폼 구축을 위한 기술적, 사업적 계획을 담고 있습니다.\n\n### 목표\n- 실시간 협업 도구 통합\n- 월 1,000만 MAU 처리 가능 인프라\n- 99.99% 가용성 보장\n\n### 기술 스택\n- Frontend: React 18 + TypeScript\n- Backend: Node.js + NestJS\n- Database: PostgreSQL + Redis\n- Infrastructure: AWS EKS + CloudFront\n\n### 예상 일정\n- Phase 1 (3개월): MVP 개발\n- Phase 2 (3개월): 베타 런칭\n- Phase 3 (2개월): 정식 출시`
+            },
+            MEETING_MINUTES: {
+                id: 'MEETING_MINUTES',
+                name: '회의록',
+                icon: '📝',
+                category: 'business',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'attendees', 'meeting_date'],
+                defaultContent: `## 아키텍처 리뷰 회의\n\n**일시**: 2025-02-11 14:00-16:00\n**참석**: 김철수 (CTO), 이영희 (Tech Lead), 박민수 (Senior Engineer)\n\n### 논의 사항\n\n#### 1. 데이터베이스 마이그레이션 전략\n- MySQL → PostgreSQL 이전 계획\n- 무중단 마이그레이션 방안 논의\n- **결정**: Blue-Green 배포 전략 채택\n\n#### 2. API 버전 관리\n- v1 지원 종료 일정: 2025년 6월\n- 클라이언트 마이그레이션 가이드 작성 필요\n\n### Action Items\n- [ ] 마이그레이션 스크립트 작성 (박민수, 2/20)\n- [ ] API 문서 업데이트 (이영희, 2/15)\n- [ ] 고객사 공지 발송 (김철수, 2/13)`
+            },
+            INCIDENT_REPORT: {
+                id: 'INCIDENT_REPORT',
+                name: '장애 보고서',
+                icon: '🚨',
+                category: 'engineering',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'severity', 'incident_id'],
+                defaultContent: `## 서비스 장애 사후 분석 (Post-Mortem)\n\n### 사건 개요\n- **발생 시각**: 2025-02-11 03:42:15 UTC\n- **복구 시각**: 2025-02-11 05:18:33 UTC\n- **영향 범위**: API 서버 전체 다운 (95분간)\n- **영향 받은 사용자**: 약 15,000명\n\n### 근본 원인 (Root Cause)\nRedis 클러스터의 메모리 부족으로 인한 캐시 서버 OOM 발생.\nFailover 메커니즘이 작동했으나, 백업 노드 또한 동일한 설정 오류로 즉시 장애 발생.\n\n### 타임라인\n- 03:42 - CloudWatch 알람 발생\n- 03:45 - On-call 엔지니어 대응 시작\n- 04:20 - 근본 원인 식별 완료\n- 04:50 - 임시 패치 배포\n- 05:18 - 서비스 완전 복구\n\n### 재발 방지 대책\n1. Redis 메모리 한계 모니터링 강화\n2. Auto-scaling 정책 재검토\n3. Chaos Engineering 테스트 정기 실시`
+            },
+            PERFORMANCE_REVIEW: {
+                id: 'PERFORMANCE_REVIEW',
+                name: '성과 평가서',
+                icon: '⭐',
+                category: 'business',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'review_period', 'rating'],
+                defaultContent: `## Q4 2024 성과 평가\n\n### 주요 성과\n\n#### 기술적 기여\n- 마이크로서비스 전환 프로젝트 리드\n- API 응답 시간 40% 개선 (평균 180ms → 108ms)\n- 신규 CI/CD 파이프라인 구축\n\n#### 리더십 & 협업\n- 주니어 개발자 3명 멘토링\n- 사내 테크톡 2회 발표\n- 크로스팀 협업 프로젝트 주도\n\n### 개선이 필요한 영역\n- 문서화 품질 향상\n- 업무 우선순위 관리\n\n### 다음 분기 목표\n- 시스템 아키텍처 리팩토링 완료\n- AWS 인증 (Solutions Architect) 취득\n- 테스트 커버리지 90% 달성\n\n**종합 평가**: Exceeds Expectations`
+            }
         };
 
-        const TooltipProvider = ({ children }) => <div>{children}</div>;
-        const Toaster = () => <div className="no-print"></div>;
+        const STORAGE_KEY = 'prodoc_documents';
+        const AUTOSAVE_INTERVAL = 3000; // 3초마다 자동 저장
 
-        // --- Home Component (Admin OS) ---
-        const Home = () => {
-            const [data, setData] = useState({
-                org: '대한혁신연구소', recipient: '', title: '', content: '', signatory: '', stage: 'normal'
+        // ═══════════════════════════════════════════════════════════════
+        // 🔧 CUSTOM HOOKS
+        // ═══════════════════════════════════════════════════════════════
+
+        /**
+         * 로컬 스토리지 동기화 훅
+         */
+        const useLocalStorage = (key, initialValue) => {
+            const [storedValue, setStoredValue] = useState(() => {
+                try {
+                    const item = window.localStorage.getItem(key);
+                    return item ? JSON.parse(item) : initialValue;
+                } catch (error) {
+                    console.error('LocalStorage 읽기 오류:', error);
+                    return initialValue;
+                }
             });
+
+            const setValue = useCallback((value) => {
+                try {
+                    const valueToStore = value instanceof Function ? value(storedValue) : value;
+                    setStoredValue(valueToStore);
+                    window.localStorage.setItem(key, JSON.stringify(valueToStore));
+                } catch (error) {
+                    console.error('LocalStorage 쓰기 오류:', error);
+                }
+            }, [key, storedValue]);
+
+            return [storedValue, setValue];
+        };
+
+        /**
+         * 키보드 단축키 훅
+         */
+        const useKeyboardShortcut = (callback, keys) => {
+            useEffect(() => {
+                const handleKeyPress = (e) => {
+                    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+                    const modifierKey = isMac ? e.metaKey : e.ctrlKey;
+                    
+                    if (modifierKey && keys.includes(e.key.toLowerCase())) {
+                        e.preventDefault();
+                        callback();
+                    }
+                };
+
+                window.addEventListener('keydown', handleKeyPress);
+                return () => window.removeEventListener('keydown', handleKeyPress);
+            }, [callback, keys]);
+        };
+
+        /**
+         * 자동 저장 훅
+         */
+        const useAutoSave = (data, callback, delay = AUTOSAVE_INTERVAL) => {
+            useEffect(() => {
+                const timer = setTimeout(() => {
+                    callback(data);
+                }, delay);
+
+                return () => clearTimeout(timer);
+            }, [data, callback, delay]);
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // 📦 STATE MANAGEMENT (Reducer Pattern)
+        // ═══════════════════════════════════════════════════════════════
+
+        const initialState = {
+            documents: [],
+            currentDocId: null,
+            history: [],
+            historyIndex: -1,
+            lastSaved: null
+        };
+
+        const actionTypes = {
+            CREATE_DOCUMENT: 'CREATE_DOCUMENT',
+            UPDATE_DOCUMENT: 'UPDATE_DOCUMENT',
+            DELETE_DOCUMENT: 'DELETE_DOCUMENT',
+            SELECT_DOCUMENT: 'SELECT_DOCUMENT',
+            LOAD_DOCUMENTS: 'LOAD_DOCUMENTS',
+            UNDO: 'UNDO',
+            REDO: 'REDO'
+        };
+
+        function documentReducer(state, action) {
+            switch (action.type) {
+                case actionTypes.CREATE_DOCUMENT:
+                    const newDoc = {
+                        id: Date.now().toString(),
+                        templateId: action.payload.templateId,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        data: {
+                            organization: '오픈소스 아카데미',
+                            recipient: '수료 대상자',
+                            title: TEMPLATES[action.payload.templateId].name,
+                            content: TEMPLATES[action.payload.templateId].defaultContent,
+                            author: '임태훈 수석 강사',
+                            ...action.payload.initialData
+                        }
+                    };
+                    return {
+                        ...state,
+                        documents: [...state.documents, newDoc],
+                        currentDocId: newDoc.id
+                    };
+
+                case actionTypes.UPDATE_DOCUMENT:
+                    return {
+                        ...state,
+                        documents: state.documents.map(doc =>
+                            doc.id === action.payload.id
+                                ? { ...doc, data: { ...doc.data, ...action.payload.updates }, updatedAt: new Date().toISOString() }
+                                : doc
+                        ),
+                        lastSaved: new Date()
+                    };
+
+                case actionTypes.DELETE_DOCUMENT:
+                    const remainingDocs = state.documents.filter(doc => doc.id !== action.payload.id);
+                    return {
+                        ...state,
+                        documents: remainingDocs,
+                        currentDocId: remainingDocs.length > 0 ? remainingDocs[0].id : null
+                    };
+
+                case actionTypes.SELECT_DOCUMENT:
+                    return {
+                        ...state,
+                        currentDocId: action.payload.id
+                    };
+
+                case actionTypes.LOAD_DOCUMENTS:
+                    return {
+                        ...state,
+                        documents: action.payload.documents,
+                        currentDocId: action.payload.documents.length > 0 ? action.payload.documents[0].id : null
+                    };
+
+                default:
+                    return state;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🎨 UI COMPONENTS
+        // ═══════════════════════════════════════════════════════════════
+
+        const Toast = ({ message, onClose }) => {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 2000);
+                return () => clearTimeout(timer);
+            }, [onClose]);
+
+            return <div className="toast no-print">{message}</div>;
+        };
+
+        const StatusBar = ({ status, lastSaved }) => (
+            <div className="flex items-center gap-3 px-6 py-3 bg-[#151b24] border-t border-[#22d3ee]/20 no-print">
+                <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${status === 'saved' ? 'bg-emerald-400' : 'bg-amber-400'} status-indicator`} />
+                    <span className="text-xs text-gray-400 mono">
+                        {status === 'saved' ? '✓ 저장됨' : '• 작성 중'}
+                    </span>
+                </div>
+                {lastSaved && (
+                    <span className="text-xs text-gray-500 mono">
+                        마지막 저장: {new Date(lastSaved).toLocaleTimeString('ko-KR')}
+                    </span>
+                )}
+            </div>
+        );
+
+        const FieldInput = ({ label, value, onChange, type = 'text', placeholder }) => (
+            <div className="space-y-1">
+                <label className="text-[10px] font-bold text-[#22d3ee] uppercase tracking-widest block mono">
+                    {label}
+                </label>
+                {type === 'textarea' ? (
+                    <textarea
+                        className="w-full bg-[#0a0e14] border border-[#22d3ee]/30 rounded-lg p-3 text-sm text-gray-200 focus:border-[#22d3ee] focus:ring-1 focus:ring-[#22d3ee] outline-none transition-all resize-none mono"
+                        rows="12"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        placeholder={placeholder}
+                    />
+                ) : (
+                    <input
+                        type={type}
+                        className="w-full bg-[#0a0e14] border border-[#22d3ee]/30 rounded-lg p-3 text-sm text-gray-200 focus:border-[#22d3ee] focus:ring-1 focus:ring-[#22d3ee] outline-none transition-all mono"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        placeholder={placeholder}
+                    />
+                )}
+            </div>
+        );
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🏗️ MAIN APPLICATION
+        // ═══════════════════════════════════════════════════════════════
+
+        const ProDocEngine = () => {
+            const [state, dispatch] = useReducer(documentReducer, initialState);
+            const [savedDocs, setSavedDocs] = useLocalStorage(STORAGE_KEY, []);
+            const [toast, setToast] = useState(null);
+            const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
             const canvasRef = useRef(null);
 
-            const samples = {
-                initial: "1. 추진 배경: 글로벌 시장 변화 대응\n2. 주요 목적: 신규 비즈니스 인프라 구축\n3. 검토 사항: 초기 예산 편성 및 인력 충원안",
-                interim: "1. 진행 현황: 1단계 개발 완료 및 테스트 진행 중\n2. 주요 지표: 목표 대비 105% 달성\n3. 향후 계획: 보안 패치 및 사용자 교육",
-                final: "1. 사업 결과: 전사 시스템 통합 완료\n2. 기대 효과: 연간 비용 20% 절감 예상\n3. 종합 결론: 본 사업의 성공적 종료 보고",
-                urgent: "[긴급 조치]\n시스템 보안 위협 감지에 따른 전 사원 비밀번호 초기화 요망.\n일시: 현재 시각부로 즉시 시행",
-                normal: "상기 건과 관련하여 다음과 같이 보고합니다."
-            };
+            // 초기 로드
+            useEffect(() => {
+                if (savedDocs.length > 0) {
+                    dispatch({ type: actionTypes.LOAD_DOCUMENTS, payload: { documents: savedDocs } });
+                } else {
+                    // 기본 문서 생성
+                    dispatch({ 
+                        type: actionTypes.CREATE_DOCUMENT, 
+                        payload: { templateId: 'LECTURE_CURRICULUM' } 
+                    });
+                }
+            }, []);
 
-            const drawSeal = () => {
+            // 자동 저장
+            useAutoSave(state.documents, (docs) => {
+                if (docs.length > 0) {
+                    setSavedDocs(docs);
+                }
+            });
+
+            // 현재 문서
+            const currentDoc = useMemo(() => 
+                state.documents.find(doc => doc.id === state.currentDocId),
+                [state.documents, state.currentDocId]
+            );
+
+            // 템플릿 정보
+            const currentTemplate = useMemo(() => 
+                currentDoc ? TEMPLATES[currentDoc.templateId] : null,
+                [currentDoc]
+            );
+
+            // 문서 업데이트
+            const updateField = useCallback((field, value) => {
+                if (!currentDoc) return;
+                dispatch({
+                    type: actionTypes.UPDATE_DOCUMENT,
+                    payload: {
+                        id: currentDoc.id,
+                        updates: { [field]: value }
+                    }
+                });
+            }, [currentDoc]);
+
+            // 새 문서 생성
+            const createNewDocument = useCallback((templateId) => {
+                dispatch({ type: actionTypes.CREATE_DOCUMENT, payload: { templateId } });
+                setToast('새 문서가 생성되었습니다');
+            }, []);
+
+            // 문서 삭제
+            const deleteDocument = useCallback((id) => {
+                if (state.documents.length === 1) {
+                    setToast('마지막 문서는 삭제할 수 없습니다');
+                    return;
+                }
+                dispatch({ type: actionTypes.DELETE_DOCUMENT, payload: { id } });
+                setToast('문서가 삭제되었습니다');
+            }, [state.documents.length]);
+
+            // 인장 렌더링
+            const renderSeal = useCallback(() => {
                 const canvas = canvasRef.current;
                 if (!canvas) return;
+                
                 const ctx = canvas.getContext('2d');
-                const name = data.org || "직인";
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = 200 * dpr;
+                canvas.height = 200 * dpr;
+                ctx.scale(dpr, dpr);
+                
                 ctx.clearRect(0, 0, 200, 200);
-                ctx.strokeStyle = "red"; ctx.lineWidth = 8; ctx.strokeRect(20, 20, 160, 160);
-                ctx.fillStyle = "red"; ctx.font = "bold 40px 'Gungsuh', serif"; ctx.textAlign = "center";
-                ctx.fillText(name.substring(0,2), 100, 85); ctx.fillText(name.substring(2,4) || "인", 100, 145);
-            };
+                
+                // 외곽선
+                ctx.strokeStyle = '#dc2626';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(100, 100, 75, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // 내부 원
+                ctx.strokeStyle = '#dc2626';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(100, 100, 60, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // 텍스트
+                ctx.fillStyle = '#dc2626';
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 16px JetBrains Mono';
+                ctx.fillText('SENIOR ARCHITECT', 100, 85);
+                ctx.font = 'bold 28px serif';
+                ctx.fillText('임태훈', 100, 120);
+            }, []);
 
-            useEffect(() => { drawSeal(); }, [data.org]);
+            useEffect(() => { renderSeal(); }, [renderSeal]);
 
-            const applyTemplate = (e) => {
-                const stage = e.target.value;
-                setData({ ...data, stage, content: samples[stage] });
-            };
+            // 키보드 단축키
+            useKeyboardShortcut(() => {
+                setSavedDocs(state.documents);
+                setToast('수동 저장 완료');
+            }, ['s']);
+
+            useKeyboardShortcut(() => {
+                window.print();
+            }, ['p']);
+
+            if (!currentDoc) {
+                return (
+                    <div className="flex items-center justify-center h-screen">
+                        <div className="text-center">
+                            <div className="text-6xl mb-4">📄</div>
+                            <p className="text-gray-400">문서를 생성하세요</p>
+                        </div>
+                    </div>
+                );
+            }
 
             return (
-                <div className="flex h-screen overflow-hidden">
-                    {/* Sidebar */}
-                    <div className="w-[450px] bg-[#111] p-6 overflow-y-auto border-r-2 border-[#c5a059] no-print">
-                        <h2 className="text-[#c5a059] text-xl font-bold mb-6 border-b-2 border-[#c5a059] pb-2">ADMIN MASTER OS</h2>
-                        
-                        <div className="mb-6 space-y-4">
-                            <div>
-                                <label className="text-xs text-[#c5a059] font-bold block mb-1">보고 단계 선택</label>
-                                <select className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white" 
-                                        onChange={applyTemplate} value={data.stage}>
-                                    <option value="normal">일반 공문</option>
-                                    <option value="initial">최초 보고</option>
-                                    <option value="interim">중간 보고</option>
-                                    <option value="final">최종 보고</option>
-                                    <option value="urgent">긴급 공문</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label className="text-xs text-[#c5a059] font-bold block mb-1">기관 및 수신자</label>
-                                <input className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white mb-2" 
-                                       placeholder="발신 기관명" value={data.org} onChange={e => setData({...data, org: e.target.value})} />
-                                <input className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white" 
-                                       placeholder="수신자 (예: 홍길동 귀하)" onChange={e => setData({...data, recipient: e.target.value})} />
+                <div className="flex h-screen w-full overflow-hidden grid-bg">
+                    {/* 사이드바 */}
+                    <aside className={`${sidebarCollapsed ? 'w-16' : 'w-[420px]'} bg-[#0a0e14] border-r border-[#22d3ee]/20 flex flex-col transition-all duration-300 no-print`}>
+                        {/* 헤더 */}
+                        <div className="p-6 border-b border-[#22d3ee]/20">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-3 h-3 rounded-full bg-[#22d3ee] shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
+                                    {!sidebarCollapsed && (
+                                        <div>
+                                            <h1 className="font-black text-[#22d3ee] tracking-tight display text-lg">PRODOC</h1>
+                                            <p className="text-[9px] text-gray-500 mono">Enterprise v2.0</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                                    className="text-gray-400 hover:text-[#22d3ee] transition-colors"
+                                >
+                                    {sidebarCollapsed ? '→' : '←'}
+                                </button>
                             </div>
 
-                            <div>
-                                <label className="text-xs text-[#c5a059] font-bold block mb-1">본문 내용 (작성 시 미리보기 자동 반영)</label>
-                                <input className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white mb-2" 
-                                       placeholder="문서 제목" value={data.title} onChange={e => setData({...data, title: e.target.value})} />
-                                <textarea className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white h-60" 
-                                          value={data.content} onChange={e => setData({...data, content: e.target.value})} />
-                            </div>
-
-                            <div>
-                                <label className="text-xs text-[#c5a059] font-bold block mb-1">발신인 서명</label>
-                                <input className="w-full p-2 bg-[#1a1a1a] border border-[#444] rounded text-white" 
-                                       placeholder="직함 및 성명" onChange={e => setData({...data, signatory: e.target.value})} />
-                            </div>
+                            {!sidebarCollapsed && (
+                                <div className="flex gap-2">
+                                    <select
+                                        className="flex-1 bg-[#151b24] border border-[#22d3ee]/30 rounded-lg p-2.5 text-xs text-gray-200 focus:border-[#22d3ee] outline-none mono"
+                                        onChange={(e) => createNewDocument(e.target.value)}
+                                        value=""
+                                    >
+                                        <option value="" disabled>+ 새 문서</option>
+                                        {Object.entries(TEMPLATES).map(([key, tmpl]) => (
+                                            <option key={key} value={key}>
+                                                {tmpl.icon} {tmpl.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                         </div>
 
-                        <button className="w-full bg-[#c5a059] text-black font-bold py-3 rounded-lg hover:bg-yellow-600 transition"
-                                onClick={() => window.print()}>
-                            공문서 PDF 저장 / 인쇄
-                        </button>
-                    </div>
+                        {!sidebarCollapsed && (
+                            <>
+                                {/* 문서 목록 */}
+                                <div className="px-4 py-3 border-b border-[#22d3ee]/20">
+                                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-2 mono">
+                                        문서 목록 ({state.documents.length})
+                                    </p>
+                                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                                        {state.documents.map((doc) => (
+                                            <div
+                                                key={doc.id}
+                                                className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all ${
+                                                    doc.id === currentDoc.id
+                                                        ? 'bg-[#22d3ee]/10 border border-[#22d3ee]/30'
+                                                        : 'hover:bg-[#151b24]'
+                                                }`}
+                                                onClick={() => dispatch({ type: actionTypes.SELECT_DOCUMENT, payload: { id: doc.id } })}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm">{TEMPLATES[doc.templateId].icon}</span>
+                                                    <div>
+                                                        <p className="text-xs text-gray-200 mono truncate max-w-[200px]">
+                                                            {doc.data.title}
+                                                        </p>
+                                                        <p className="text-[9px] text-gray-500 mono">
+                                                            {new Date(doc.updatedAt).toLocaleDateString('ko-KR')}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {state.documents.length > 1 && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            deleteDocument(doc.id);
+                                                        }}
+                                                        className="text-gray-500 hover:text-red-400 text-xs"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
 
-                    {/* Preview Area */}
-                    <div className="flex-1 bg-[#333] p-10 overflow-y-auto flex justify-center print-area">
-                        <div className="style-paper shadow-2xl">
-                            <div className="doc-header">{data.org}</div>
-                            <div className="mb-8 text-lg">
-                                <p><b>수 신 :</b> {data.recipient}</p>
-                                <p><b>제 목 :</b> <span className="font-bold">{data.stage !== 'normal' ? `[${data.stage.toUpperCase()}] ` : ''}{data.title}</span></p>
-                            </div>
-                            <div className="content-body">{data.content}</div>
-                            
-                            {/* 자동 생성 직인 */}
-                            <canvas ref={canvasRef} width="200" height="200" id="seal-canvas"></canvas>
-                            
-                            <div className="text-center text-2xl font-bold border-t-2 border-black pt-4 mt-20">
-                                {data.signatory || '발신인 명의'}
-                            </div>
-                            <div className="mt-10 text-xs text-gray-500 flex justify-between border-t pt-2">
-                                <span>발행 일자: {new Date().toLocaleDateString()}</span>
-                                <span>문서번호: 2026-HQ-{Math.floor(Math.random()*9000)+1000}</span>
-                            </div>
+                                {/* 편집 필드 */}
+                                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                                    <div className="gradient-border rounded-lg p-4 mb-4">
+                                        <p className="text-[10px] text-[#22d3ee] font-bold mono mb-2">
+                                            📋 {currentTemplate?.name}
+                                        </p>
+                                        <p className="text-[9px] text-gray-500 mono">
+                                            {currentTemplate?.category.toUpperCase()}
+                                        </p>
+                                    </div>
+
+                                    <FieldInput
+                                        label="조직/기관명"
+                                        value={currentDoc.data.organization || ''}
+                                        onChange={(v) => updateField('organization', v)}
+                                        placeholder="예: 오픈소스 아카데미"
+                                    />
+
+                                    <FieldInput
+                                        label="수신자"
+                                        value={currentDoc.data.recipient || ''}
+                                        onChange={(v) => updateField('recipient', v)}
+                                        placeholder="예: 이지은 수석 엔지니어"
+                                    />
+
+                                    <FieldInput
+                                        label="문서 제목"
+                                        value={currentDoc.data.title || ''}
+                                        onChange={(v) => updateField('title', v)}
+                                        placeholder="예: 시스템 아키텍처 마스터클래스"
+                                    />
+
+                                    <FieldInput
+                                        label="본문 내용"
+                                        type="textarea"
+                                        value={currentDoc.data.content || ''}
+                                        onChange={(v) => updateField('content', v)}
+                                        placeholder="마크다운 형식으로 작성하세요..."
+                                    />
+
+                                    <FieldInput
+                                        label="서명 (발급자)"
+                                        value={currentDoc.data.author || ''}
+                                        onChange={(v) => updateField('author', v)}
+                                        placeholder="예: 임태훈 수석 강사"
+                                    />
+                                </div>
+
+                                {/* 액션 버튼 */}
+                                <div className="p-6 border-t border-[#22d3ee]/20 space-y-2">
+                                    <button
+                                        onClick={() => window.print()}
+                                        className="w-full bg-gradient-to-r from-[#22d3ee] to-[#06b6d4] hover:from-[#06b6d4] hover:to-[#0891b2] text-[#0a0e14] font-bold py-3 px-4 rounded-lg transition-all transform active:scale-[0.98] neo-glow mono text-sm"
+                                    >
+                                        📄 PDF 생성 (Ctrl+P)
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setSavedDocs(state.documents);
+                                            setToast('모든 문서 저장 완료');
+                                        }}
+                                        className="w-full bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-3 px-4 rounded-lg border border-[#22d3ee]/30 transition-all mono text-sm"
+                                    >
+                                        💾 저장 (Ctrl+S)
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </aside>
+
+                    {/* 메인 프리뷰 */}
+                    <main className="flex-1 bg-[#0d1117] overflow-y-auto flex flex-col print-area">
+                        <div className="flex-1 flex justify-center items-start p-12">
+                            <section className="document-canvas shadow-2xl">
+                                {/* 문서 헤더 */}
+                                <div className="border-b-4 border-black pb-6 mb-12 px-12 pt-12">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h2 className="text-4xl font-black tracking-tighter uppercase display mb-1">
+                                                {currentDoc.data.organization}
+                                            </h2>
+                                            <code className="text-xs font-bold text-blue-600 mono tracking-wider">
+                                                {currentTemplate?.category.toUpperCase()} / {currentTemplate?.id}
+                                            </code>
+                                        </div>
+                                        <div className="text-right mono text-[9px] text-gray-400">
+                                            <p>TIMESTAMP: {new Date().toISOString()}</p>
+                                            <p>DOC: {currentDoc.id.substring(0, 8).toUpperCase()}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* 메타데이터 */}
+                                <div className="px-12 mb-12 grid grid-cols-12 gap-4 text-sm border-l-4 border-blue-600 pl-8">
+                                    <div className="col-span-2 font-bold text-gray-500 uppercase mono text-xs">TO:</div>
+                                    <div className="col-span-10 font-black text-2xl tracking-tight">
+                                        {currentDoc.data.recipient}
+                                    </div>
+                                    <div className="col-span-2 font-bold text-gray-500 uppercase mono text-xs">RE:</div>
+                                    <div className="col-span-10 font-bold text-lg">
+                                        {currentDoc.data.title}
+                                    </div>
+                                </div>
+
+                                {/* 본문 */}
+                                <article className="px-12 text-gray-800 border-t border-gray-200 pt-12 leading-relaxed whitespace-pre-wrap">
+                                    {currentDoc.data.content}
+                                </article>
+
+                                {/* 인장 */}
+                                <canvas
+                                    ref={canvasRef}
+                                    width="200"
+                                    height="200"
+                                    className="absolute right-16 bottom-32 w-32 h-32 opacity-90"
+                                />
+
+                                {/* 서명 */}
+                                <div className="px-12 mt-24 mb-12 text-center border-t border-gray-200 pt-8">
+                                    <p className="text-[9px] text-gray-400 uppercase tracking-[0.4em] mb-3 mono">
+                                        AUTHORIZED SIGNATORY
+                                    </p>
+                                    <div className="inline-block border-b-3 border-black px-16 py-2">
+                                        <p className="text-3xl font-black tracking-tight">
+                                            {currentDoc.data.author}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* 푸터 */}
+                                <footer className="absolute bottom-8 left-12 right-12 flex justify-between items-center text-[8px] mono text-gray-300 border-t border-gray-100 pt-4">
+                                    <span>VERIFICATION: 0x{currentDoc.id.substring(0, 12).toUpperCase()}</span>
+                                    <span>PRODOC ENGINE v2.0 • ENTERPRISE EDITION</span>
+                                </footer>
+                            </section>
                         </div>
-                    </div>
+
+                        <StatusBar status="saved" lastSaved={state.lastSaved} />
+                    </main>
+
+                    {/* 토스트 알림 */}
+                    {toast && <Toast message={toast} onClose={() => setToast(null)} />}
                 </div>
             );
         };
 
-        // --- App Integration ---
-        function App() {
-            return (
-                <ErrorBoundary>
-                    <ThemeProvider defaultTheme="dark">
-                        <TooltipProvider>
-                            <Toaster />
-                            <Home />
-                        </TooltipProvider>
-                    </ThemeProvider>
-                </ErrorBoundary>
-            );
-        }
-
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(<ProDocEngine />);
     </script>
 </body>
 </html>
