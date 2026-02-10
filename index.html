@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Archivo+Black&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @page { size: A4; margin: 0; }
         @media print { 
@@ -590,6 +591,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
             const [toast, setToast] = useState(null);
             const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
             const canvasRef = useRef(null);
+            const printRef = useRef(null);
 
             // 초기 로드
             useEffect(() => {
@@ -650,6 +652,28 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 dispatch({ type: actionTypes.DELETE_DOCUMENT, payload: { id } });
                 setToast('문서가 삭제되었습니다');
             }, [state.documents.length]);
+
+            // PDF 내보내기
+            const exportToPDF = useCallback(() => {
+                if (!printRef.current) return;
+                setToast('PDF를 생성 중입니다...');
+                
+                const element = printRef.current;
+                const opt = {
+                    margin: 0,
+                    filename: `${currentDoc.data.title || 'document'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                html2pdf().set(opt).from(element).save().then(() => {
+                    setToast('PDF 다운로드 완료');
+                }).catch(err => {
+                    console.error('PDF export error:', err);
+                    setToast('PDF 생성 중 오류가 발생했습니다');
+                });
+            }, [currentDoc]);
 
             // 인장 렌더링
             const renderSeal = useCallback(() => {
@@ -916,10 +940,16 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                 {/* 액션 버튼 */}
                                 <div className="p-6 border-t border-[#22d3ee]/20 space-y-2">
                                     <button
-                                        onClick={() => window.print()}
+                                        onClick={exportToPDF}
                                         className="w-full bg-gradient-to-r from-[#22d3ee] to-[#06b6d4] hover:from-[#06b6d4] hover:to-[#0891b2] text-[#0a0e14] font-bold py-3 px-4 rounded-lg transition-all transform active:scale-[0.98] neo-glow mono text-sm"
                                     >
-                                        📄 PDF 생성 (Ctrl+P)
+                                        📄 PDF 내보내기 (Library)
+                                    </button>
+                                    <button
+                                        onClick={() => window.print()}
+                                        className="w-full bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-2 px-4 rounded-lg border border-[#22d3ee]/30 transition-all mono text-xs"
+                                    >
+                                        🖨️ 인쇄 / PDF 저장 (Ctrl+P)
                                     </button>
                                     
                                     <div className="grid grid-cols-2 gap-2">
@@ -993,7 +1023,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
 
                     {/* 메인 프리뷰 */}
                     <main className="flex-1 bg-[#0d1117] overflow-y-auto flex flex-col print-area">
-                        <div className="flex-1 flex justify-center items-start p-12">
+                        <div ref={printRef} className="flex-1 flex justify-center items-start p-12">
                             {currentTemplate?.isSecurities ? (
                                 /* ═══════════════════════════════════════
                                    한화투자증권 스타일 레이아웃
