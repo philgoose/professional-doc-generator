@@ -182,6 +182,49 @@
                 category: 'business',
                 fields: ['organization', 'recipient', 'title', 'content', 'author', 'review_period', 'rating'],
                 defaultContent: `## Q4 2024 성과 평가\n\n### 주요 성과\n\n#### 기술적 기여\n- 마이크로서비스 전환 프로젝트 리드\n- API 응답 시간 40% 개선 (평균 180ms → 108ms)\n- 신규 CI/CD 파이프라인 구축\n\n#### 리더십 & 협업\n- 주니어 개발자 3명 멘토링\n- 사내 테크톡 2회 발표\n- 크로스팀 협업 프로젝트 주도\n\n### 개선이 필요한 영역\n- 문서화 품질 향상\n- 업무 우선순위 관리\n\n### 다음 분기 목표\n- 시스템 아키텍처 리팩토링 완료\n- AWS 인증 (Solutions Architect) 취득\n- 테스트 커버리지 90% 달성\n\n**종합 평가**: Exceeds Expectations`
+            },
+            INVESTMENT_REPORT: {
+                id: 'INVESTMENT_REPORT',
+                name: '투자 리서치 보고서',
+                icon: '📊',
+                category: 'securities',
+                fields: ['organization', 'company', 'title', 'content', 'author', 'rating', 'target_price', 'current_price'],
+                isSecurities: true,
+                defaultContent: `## 투자의견 및 목표주가
+
+투자의견: BUY (신규)\n목표주가: 85,000원\n현재주가: 68,500원 (2025.02.11 기준)\n상승여력: 24.1%
+
+## Investment Thesis
+
+동사는 AI 반도체 시장의 급성장에 따라 2025년 실적 모멘텀이 강화될 전망입니다. 주요 고객사의 차세대 데이터센터 투자 확대와 HBM(고대역폭 메모리) 수요 증가가 긍정적입니다.
+
+### 핵심 투자 포인트
+
+1. **AI 반도체 슈퍼사이클 수혜**
+   - 글로벌 AI 서버 출하량 YoY +45% 예상
+   - HBM3E 매출 비중 2024년 15% → 2025년 32%
+
+2. **실적 개선 가시화**
+   - 2025년 영업이익률 23.5% 전망 (2024년 18.2%)
+   - 1분기 영업이익 YoY +127% 예상
+
+3. **밸류에이션 매력**
+   - 현재 P/E 14.2배 (과거 5년 평균 18.5배)
+   - P/B 1.8배로 동종업계 대비 30% 할인
+
+## 재무전망 (단위: 억원)
+
+구분 | 2023 | 2024E | 2025F | 2026F
+매출액 | 45,230 | 52,180 | 64,850 | 76,200
+영업이익 | 7,850 | 9,497 | 15,240 | 19,050
+순이익 | 6,120 | 7,344 | 11,780 | 14,730
+EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
+
+## 리스크 요인
+
+- 주요 고객사 수주 지연 가능성
+- 환율 변동성 (달러당 ±100원 시 영업이익 8% 변동)
+- 중국 경기 둔화에 따른 수요 감소`
             }
         };
 
@@ -253,6 +296,146 @@
         };
 
         // ═══════════════════════════════════════════════════════════════
+        // 🔧 UTILITY FUNCTIONS
+        // ═══════════════════════════════════════════════════════════════
+
+        /**
+         * 마크다운 테이블을 HTML로 변환
+         */
+        const parseMarkdownTable = (text) => {
+            const lines = text.split('\n');
+            const tables = [];
+            let currentTable = null;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                // 테이블 행 감지 (| 로 시작하고 끝남)
+                if (line.startsWith('|') && line.endsWith('|')) {
+                    const cells = line.split('|').filter(cell => cell.trim() !== '').map(cell => cell.trim());
+                    
+                    if (!currentTable) {
+                        currentTable = { headers: cells, rows: [] };
+                    } else if (cells.every(cell => cell.match(/^[-:]+$/))) {
+                        // 구분선은 무시
+                        continue;
+                    } else {
+                        currentTable.rows.push(cells);
+                    }
+                } else if (currentTable) {
+                    // 테이블 종료
+                    tables.push(currentTable);
+                    currentTable = null;
+                }
+            }
+            
+            if (currentTable) {
+                tables.push(currentTable);
+            }
+            
+            return tables;
+        };
+
+        /**
+         * 증권 보고서용 컨텐츠 렌더러 (테이블 강조)
+         */
+        const SecuritiesContentRenderer = ({ content }) => {
+            const tables = parseMarkdownTable(content);
+            
+            if (tables.length === 0) {
+                return <div className="whitespace-pre-wrap">{content}</div>;
+            }
+            
+            // 테이블이 있는 경우, 텍스트와 테이블을 분리해서 렌더링
+            const parts = [];
+            let lastIndex = 0;
+            const lines = content.split('\n');
+            let lineIndex = 0;
+            
+            while (lineIndex < lines.length) {
+                const line = lines[lineIndex];
+                
+                if (line.trim().startsWith('|')) {
+                    // 테이블 시작
+                    const tableStart = lineIndex;
+                    let tableEnd = lineIndex;
+                    
+                    while (tableEnd < lines.length && lines[tableEnd].trim().startsWith('|')) {
+                        tableEnd++;
+                    }
+                    
+                    // 테이블 전 텍스트
+                    if (tableStart > lastIndex) {
+                        parts.push({
+                            type: 'text',
+                            content: lines.slice(lastIndex, tableStart).join('\n')
+                        });
+                    }
+                    
+                    // 테이블 추가
+                    const tableText = lines.slice(tableStart, tableEnd).join('\n');
+                    const parsedTables = parseMarkdownTable(tableText);
+                    if (parsedTables.length > 0) {
+                        parts.push({
+                            type: 'table',
+                            data: parsedTables[0]
+                        });
+                    }
+                    
+                    lastIndex = tableEnd;
+                    lineIndex = tableEnd;
+                } else {
+                    lineIndex++;
+                }
+            }
+            
+            // 마지막 텍스트
+            if (lastIndex < lines.length) {
+                parts.push({
+                    type: 'text',
+                    content: lines.slice(lastIndex).join('\n')
+                });
+            }
+            
+            return (
+                <div>
+                    {parts.map((part, idx) => {
+                        if (part.type === 'text') {
+                            return <div key={idx} className="whitespace-pre-wrap mb-4">{part.content}</div>;
+                        } else {
+                            return (
+                                <div key={idx} className="my-6 overflow-x-auto">
+                                    <table className="w-full border-collapse border-2 border-gray-300">
+                                        <thead>
+                                            <tr className="bg-red-600 text-white">
+                                                {part.data.headers.map((header, i) => (
+                                                    <th key={i} className="border border-gray-300 px-4 py-3 text-left font-bold text-sm">
+                                                        {header}
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {part.data.rows.map((row, i) => (
+                                                <tr key={i} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                                                    {row.map((cell, j) => (
+                                                        <td key={j} className="border border-gray-300 px-4 py-2 text-sm">
+                                                            {cell}
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            );
+                        }
+                    })}
+                </div>
+            );
+        };
+
+        // ═══════════════════════════════════════════════════════════════
         // 📦 STATE MANAGEMENT (Reducer Pattern)
         // ═══════════════════════════════════════════════════════════════
 
@@ -282,7 +465,16 @@
                         templateId: action.payload.templateId,
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString(),
-                        data: {
+                        data: TEMPLATES[action.payload.templateId].isSecurities ? {
+                            company: '기업명',
+                            title: TEMPLATES[action.payload.templateId].name,
+                            content: TEMPLATES[action.payload.templateId].defaultContent,
+                            author: '임채훈 수석 애널리스트',
+                            rating: 'BUY',
+                            target_price: '85,000',
+                            current_price: '68,500',
+                            ...action.payload.initialData
+                        } : {
                             organization: '한국기술교육원',
                             recipient: '수신자',
                             title: TEMPLATES[action.payload.templateId].name,
@@ -625,41 +817,100 @@
                                         </p>
                                     </div>
 
-                                    <FieldInput
-                                        label="조직/기관명"
-                                        value={currentDoc.data.organization || ''}
-                                        onChange={(v) => updateField('organization', v)}
-                                        placeholder="예: 한국기술교육원"
-                                    />
+                                    {currentTemplate?.isSecurities ? (
+                                        /* 증권 보고서 전용 필드 */
+                                        <>
+                                            <FieldInput
+                                                label="기업명"
+                                                value={currentDoc.data.company || ''}
+                                                onChange={(v) => updateField('company', v)}
+                                                placeholder="예: 삼성전자"
+                                            />
 
-                                    <FieldInput
-                                        label="수신자"
-                                        value={currentDoc.data.recipient || ''}
-                                        onChange={(v) => updateField('recipient', v)}
-                                        placeholder="예: 홍길동 책임연구원"
-                                    />
+                                            <FieldInput
+                                                label="리포트 제목"
+                                                value={currentDoc.data.title || ''}
+                                                onChange={(v) => updateField('title', v)}
+                                                placeholder="예: AI 반도체 슈퍼사이클 진입"
+                                            />
 
-                                    <FieldInput
-                                        label="문서 제목"
-                                        value={currentDoc.data.title || ''}
-                                        onChange={(v) => updateField('title', v)}
-                                        placeholder="예: 2025년 상반기 교육과정 안내"
-                                    />
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <FieldInput
+                                                    label="투자의견"
+                                                    value={currentDoc.data.rating || ''}
+                                                    onChange={(v) => updateField('rating', v)}
+                                                    placeholder="BUY/HOLD/SELL"
+                                                />
+                                                <FieldInput
+                                                    label="목표주가"
+                                                    value={currentDoc.data.target_price || ''}
+                                                    onChange={(v) => updateField('target_price', v)}
+                                                    placeholder="85,000"
+                                                />
+                                            </div>
 
-                                    <FieldInput
-                                        label="본문 내용"
-                                        type="textarea"
-                                        value={currentDoc.data.content || ''}
-                                        onChange={(v) => updateField('content', v)}
-                                        placeholder="본문 내용을 입력하세요..."
-                                    />
+                                            <FieldInput
+                                                label="현재주가"
+                                                value={currentDoc.data.current_price || ''}
+                                                onChange={(v) => updateField('current_price', v)}
+                                                placeholder="68,500"
+                                            />
 
-                                    <FieldInput
-                                        label="발신자 (서명)"
-                                        value={currentDoc.data.author || ''}
-                                        onChange={(v) => updateField('author', v)}
-                                        placeholder="예: 임채훈 원장"
-                                    />
+                                            <FieldInput
+                                                label="분석 내용"
+                                                type="textarea"
+                                                value={currentDoc.data.content || ''}
+                                                onChange={(v) => updateField('content', v)}
+                                                placeholder="투자 의견, 재무 분석, 리스크 요인 등을 작성하세요..."
+                                            />
+
+                                            <FieldInput
+                                                label="애널리스트"
+                                                value={currentDoc.data.author || ''}
+                                                onChange={(v) => updateField('author', v)}
+                                                placeholder="예: 임채훈 수석 애널리스트"
+                                            />
+                                        </>
+                                    ) : (
+                                        /* 일반 문서 필드 */
+                                        <>
+                                            <FieldInput
+                                                label="조직/기관명"
+                                                value={currentDoc.data.organization || ''}
+                                                onChange={(v) => updateField('organization', v)}
+                                                placeholder="예: 한국기술교육원"
+                                            />
+
+                                            <FieldInput
+                                                label="수신자"
+                                                value={currentDoc.data.recipient || ''}
+                                                onChange={(v) => updateField('recipient', v)}
+                                                placeholder="예: 홍길동 책임연구원"
+                                            />
+
+                                            <FieldInput
+                                                label="문서 제목"
+                                                value={currentDoc.data.title || ''}
+                                                onChange={(v) => updateField('title', v)}
+                                                placeholder="예: 2025년 상반기 교육과정 안내"
+                                            />
+
+                                            <FieldInput
+                                                label="본문 내용"
+                                                type="textarea"
+                                                value={currentDoc.data.content || ''}
+                                                onChange={(v) => updateField('content', v)}
+                                                placeholder="본문 내용을 입력하세요..."
+                                            />
+
+                                            <FieldInput
+                                                label="발신자 (서명)"
+                                                value={currentDoc.data.author || ''}
+                                                onChange={(v) => updateField('author', v)}
+                                                placeholder="예: 임채훈 원장"
+                                            />
+                                        </>
+                                    )}
                                 </div>
 
                                 {/* 액션 버튼 */}
@@ -670,6 +921,40 @@
                                     >
                                         📄 PDF 생성 (Ctrl+P)
                                     </button>
+                                    
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            onClick={() => {
+                                                const dataStr = JSON.stringify(currentDoc.data, null, 2);
+                                                const blob = new Blob([dataStr], { type: 'application/json' });
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = `${currentDoc.data.title || 'document'}.json`;
+                                                a.click();
+                                                setToast('JSON 내보내기 완료');
+                                            }}
+                                            className="bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-2 px-3 rounded-lg border border-[#22d3ee]/30 transition-all mono text-xs"
+                                        >
+                                            📦 JSON
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const textContent = `${currentDoc.data.title}\n\n${currentDoc.data.content}`;
+                                                const blob = new Blob([textContent], { type: 'text/plain' });
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = `${currentDoc.data.title || 'document'}.txt`;
+                                                a.click();
+                                                setToast('텍스트 내보내기 완료');
+                                            }}
+                                            className="bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-2 px-3 rounded-lg border border-[#22d3ee]/30 transition-all mono text-xs"
+                                        >
+                                            📝 TXT
+                                        </button>
+                                    </div>
+                                    
                                     <button
                                         onClick={() => {
                                             setSavedDocs(state.documents);
@@ -679,6 +964,28 @@
                                     >
                                         💾 저장 (Ctrl+S)
                                     </button>
+                                    
+                                    {/* 템플릿 빠른 전환 */}
+                                    <div className="border-t border-[#22d3ee]/20 pt-3 mt-3">
+                                        <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-2 mono">
+                                            Quick Templates
+                                        </p>
+                                        <div className="grid grid-cols-4 gap-1">
+                                            {Object.entries(TEMPLATES).slice(0, 8).map(([key, tmpl]) => (
+                                                <button
+                                                    key={key}
+                                                    onClick={() => createNewDocument(key)}
+                                                    className="aspect-square flex flex-col items-center justify-center bg-[#0a0e14] hover:bg-[#151b24] border border-[#22d3ee]/20 hover:border-[#22d3ee]/50 rounded transition-all"
+                                                    title={tmpl.name}
+                                                >
+                                                    <span className="text-lg">{tmpl.icon}</span>
+                                                    <span className="text-[8px] text-gray-500 mt-1 mono truncate max-w-full px-1">
+                                                        {tmpl.name.split(' ')[0]}
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </>
                         )}
@@ -687,7 +994,120 @@
                     {/* 메인 프리뷰 */}
                     <main className="flex-1 bg-[#0d1117] overflow-y-auto flex flex-col print-area">
                         <div className="flex-1 flex justify-center items-start p-12">
-                            <section className="document-canvas shadow-2xl">
+                            {currentTemplate?.isSecurities ? (
+                                /* ═══════════════════════════════════════
+                                   한화투자증권 스타일 레이아웃
+                                   ═══════════════════════════════════════ */
+                                <section className="document-canvas shadow-2xl">
+                                    {/* 증권사 헤더 */}
+                                    <div className="bg-gradient-to-r from-red-700 to-red-600 px-12 py-8">
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <h1 className="text-4xl font-black text-white display tracking-tight">
+                                                    한화투자증권
+                                                </h1>
+                                                <p className="text-red-100 text-sm mt-1 mono font-semibold">
+                                                    HANWHA INVESTMENT & SECURITIES
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-white text-xs font-bold mono">Research Center</p>
+                                                <p className="text-red-100 text-[10px] mono">{new Date().toLocaleDateString('ko-KR')}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 기업 정보 헤더 */}
+                                    <div className="bg-gray-50 border-b-4 border-red-600 px-12 py-6">
+                                        <div className="flex justify-between items-end">
+                                            <div>
+                                                <h2 className="text-3xl font-black text-gray-900 mb-1">
+                                                    {currentDoc.data.company || '기업명'}
+                                                </h2>
+                                                <p className="text-gray-600 text-sm font-semibold">
+                                                    {currentDoc.data.title}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="bg-red-600 text-white px-6 py-2 rounded-lg inline-block">
+                                                    <p className="text-xs font-bold">투자의견</p>
+                                                    <p className="text-2xl font-black">{currentDoc.data.rating || 'BUY'}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 핵심 지표 */}
+                                    <div className="px-12 py-6 bg-white border-b border-gray-200">
+                                        <div className="grid grid-cols-4 gap-6">
+                                            <div className="border-l-4 border-red-600 pl-4">
+                                                <p className="text-xs text-gray-500 font-semibold mb-1">목표주가</p>
+                                                <p className="text-2xl font-black text-red-600">
+                                                    {currentDoc.data.target_price || '85,000'}원
+                                                </p>
+                                            </div>
+                                            <div className="border-l-4 border-gray-300 pl-4">
+                                                <p className="text-xs text-gray-500 font-semibold mb-1">현재주가</p>
+                                                <p className="text-2xl font-black text-gray-700">
+                                                    {currentDoc.data.current_price || '68,500'}원
+                                                </p>
+                                            </div>
+                                            <div className="border-l-4 border-blue-600 pl-4">
+                                                <p className="text-xs text-gray-500 font-semibold mb-1">상승여력</p>
+                                                <p className="text-2xl font-black text-blue-600">+24.1%</p>
+                                            </div>
+                                            <div className="border-l-4 border-gray-300 pl-4">
+                                                <p className="text-xs text-gray-500 font-semibold mb-1">시가총액</p>
+                                                <p className="text-2xl font-black text-gray-700">8.5조원</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 본문 */}
+                                    <article className="px-12 py-8">
+                                        <div className="prose max-w-none">
+                                            <div className="text-gray-800 leading-relaxed text-[15px]"
+                                                 style={{
+                                                     fontFamily: "'Crimson Pro', serif"
+                                                 }}>
+                                                <SecuritiesContentRenderer content={currentDoc.data.content} />
+                                            </div>
+                                        </div>
+                                    </article>
+
+                                    {/* 애널리스트 정보 */}
+                                    <div className="px-12 py-6 bg-gray-50 border-t-2 border-gray-200">
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <p className="text-xs text-gray-500 mb-1">애널리스트</p>
+                                                <p className="text-lg font-bold text-gray-900">{currentDoc.data.author}</p>
+                                                <p className="text-xs text-gray-600 mono">research@hanwhawm.com</p>
+                                            </div>
+                                            <div className="text-right text-[10px] text-gray-500 mono">
+                                                <p>Report ID: {currentDoc.id.substring(0, 8).toUpperCase()}</p>
+                                                <p>Published: {new Date().toISOString()}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 면책조항 */}
+                                    <footer className="px-12 py-6 bg-gray-100 border-t border-gray-300">
+                                        <p className="text-[9px] text-gray-600 leading-relaxed">
+                                            본 자료는 고객의 증권투자를 돕기 위해 작성된 참고자료이며, 어떠한 경우에도 법적 책임소재에 대한 증빙자료로 사용될 수 없습니다. 
+                                            본 자료는 당사의 저작물로서 모든 저작권은 당사에게 있으며, 어떠한 경우에도 당사의 동의 없이 복제, 배포, 전송, 기타 저작권 침해행위를 할 수 없습니다. 
+                                            투자자는 금융투자상품에 대하여 당사로부터 충분한 설명을 받을 권리가 있으며, 투자 전 상품설명서 및 약관을 반드시 읽어보시기 바랍니다.
+                                        </p>
+                                        <div className="flex justify-between items-center mt-4 text-[10px] text-gray-500 font-bold">
+                                            <span>한화투자증권 리서치센터</span>
+                                            <span>Tel: 02-3772-7700</span>
+                                        </div>
+                                    </footer>
+                                </section>
+                            ) : (
+                                /* ═══════════════════════════════════════
+                                   일반 공문서 스타일 레이아웃
+                                   ═══════════════════════════════════════ */
+                                <section className="document-canvas shadow-2xl">
                                 {/* 문서 헤더 - 공식 문서 스타일 */}
                                 <div className="border-b-2 border-gray-800 pb-8 mb-8 px-12 pt-12">
                                     <div className="text-center mb-8">
@@ -827,7 +1247,8 @@
                                         <p>이 문서는 전자문서 및 전자거래 기본법에 따라 법적 효력을 가집니다.</p>
                                     </div>
                                 </footer>
-                            </section>
+                                </section>
+                            )}
                         </div>
 
                         <StatusBar status="saved" lastSaved={state.lastSaved} />
