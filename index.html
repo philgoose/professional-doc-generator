@@ -2,44 +2,125 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Global Master Official Document Generator</title>
+    <title>Global Administrative Master OS v3.0</title>
     <style>
-        :root { --admin-blue: #003366; --gold: #b8860b; }
-        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; background: #333; display: flex; height: 100vh; color: #fff; }
-        .sidebar { width: 450px; background: #1a1a1a; padding: 25px; overflow-y: auto; border-right: 1px solid var(--gold); }
-        .sidebar h2 { color: var(--gold); border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; }
-        .control-group { margin-bottom: 15px; }
-        label { display: block; font-size: 11px; color: #888; margin-bottom: 5px; font-weight: bold; }
-        input, textarea, select { width: 100%; padding: 10px; border-radius: 4px; border: none; background: #2a2a2a; color: #fff; box-sizing: border-box; }
-        .preview-zone { flex: 1; padding: 40px; overflow-y: auto; display: flex; justify-content: center; background: #444; }
-        .paper { width: 210mm; min-height: 297mm; background: #fff; color: #000; padding: 30mm 20mm; box-sizing: border-box; box-shadow: 0 0 30px rgba(0,0,0,0.5); position: relative; }
-        .doc-title { text-align: center; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 30px; }
-        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.9em; }
-        .info-table td { border-bottom: 1px solid #ddd; padding: 8px 0; }
-        .main-content { line-height: 1.8; text-align: justify; min-height: 450px; white-space: pre-wrap; }
-        .footer-sign { text-align: center; font-weight: bold; margin-top: 60px; position: relative; }
-        .seal { position: absolute; right: 40px; top: -10px; width: 60px; height: 60px; border: 3px solid red; color: red; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; transform: rotate(-10deg); }
-        .contact { margin-top: 40px; border-top: 1px solid #000; padding-top: 15px; font-size: 11px; color: #555; }
-        .print-btn { position: fixed; bottom: 30px; right: 30px; padding: 15px 30px; background: var(--gold); color: #fff; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; }
-        @media print { .sidebar, .print-btn { display: none; } .preview-zone { padding: 0; } .paper { box-shadow: none; width: 100%; margin: 0; } }
+        :root { --navy: #0a192f; --gold: #c5a059; --bg: #222; --paper: #fff; }
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; background: var(--bg); display: flex; height: 100vh; color: #fff; overflow: hidden; }
+        .sidebar { width: 450px; background: #111; padding: 20px; overflow-y: auto; border-right: 2px solid var(--gold); }
+        .sidebar h2 { color: var(--gold); border-bottom: 2px solid var(--gold); padding-bottom: 10px; font-size: 1.2em; }
+        .group { margin-bottom: 12px; }
+        label { display: block; font-size: 11px; color: #888; margin-bottom: 4px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 8px; border-radius: 4px; border: none; background: #2a2a2a; color: #fff; font-size: 13px; box-sizing: border-box; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .btn { padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-save { background: #28a745; color: white; }
+        .btn-load { background: #ffc107; color: black; }
+        .preview-area { flex: 1; padding: 30px; overflow-y: auto; display: flex; justify-content: center; background: #333; }
+        .paper { width: 210mm; min-height: 297mm; background: var(--paper); color: #000; padding: 25mm 20mm; box-shadow: 0 0 30px rgba(0,0,0,0.5); position: relative; }
+        .urgent-mark { position: absolute; top: 30px; left: 30px; border: 3px solid red; color: red; padding: 5px 15px; font-weight: bold; font-size: 20px; display: none; transform: rotate(-5deg); }
+        .doc-header { text-align: center; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 25px; font-size: 28px; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+        .info-table td { border-bottom: 1px solid #eee; padding: 8px 0; }
+        .main-text { line-height: 1.8; text-align: justify; min-height: 550px; white-space: pre-wrap; }
+        .seal-area { position: absolute; right: 50px; bottom: 100px; width: 80px; height: 80px; }
+        .seal-img { width: 100%; height: 100%; object-fit: contain; opacity: 0.8; display: none; }
+        .footer { text-align: center; font-weight: bold; margin-top: 50px; font-size: 22px; }
+        .print-btn { position: fixed; bottom: 30px; right: 30px; padding: 15px 30px; background: var(--gold); color: #000; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        @media print { .sidebar, .print-btn { display: none; } .preview-area { padding: 0; } .paper { box-shadow: none; width: 100%; margin: 0; } }
     </style>
 </head>
 <body>
     <div class="sidebar">
-        <h2>GLOBAL ADMIN OS</h2>
-        <div class="control-group">
-            <label>언어 선택 (LANGUAGE)</label>
-            <select id="langSel" onchange="changeLang()">
-                <option value="ko">한국어 (Korean)</option>
-                <option value="en">English (English)</option>
-                <option value="cn">中文 (Chinese)</option>
-            </select>
+        <h2>ADMIN MASTER OS</h2>
+        <div class="group"><label>언어 / LANGUAGE</label><select id="lSel" onchange="cL()"><option value="ko">한국어</option><option value="en">English</option><option value="cn">中文</option></select></div>
+        <div class="group"><label>보고 형식 / TEMPLATE</label><select id="tSel" onchange="u()"><option value="normal">일반 문서</option><option value="initial">최초 보고</option><option value="interim">중간 보고</option><option value="final">최종 보고</option><option value="urgent">긴급 문서</option></select></div>
+        <div class="group"><label>글꼴 / FONT</label><select id="fSel" onchange="u()"><option value="'Malgun Gothic'">맑은 고딕</option><option value="'Noto Serif KR'">바탕체</option><option value="Arial">Arial</option><option value="SimSun">宋体</option></select></div>
+        <div class="group"><label>글자 크기 / SIZE</label><input type="range" id="sSel" min="12" max="22" value="16" oninput="u()"></div>
+        <hr style="border:0.5px solid #444;">
+        <div class="group"><label id="lb0">발신기관</label><input type="text" id="i0" oninput="u()"></div>
+        <div class="group"><label id="lb1">수신</label><input type="text" id="i1" oninput="u()"></div>
+        <div class="group"><label id="lb2">제목</label><input type="text" id="i2" oninput="u()"></div>
+        <div class="group"><label id="lb3">본문 내용</label><textarea id="i3" oninput="u()" style="height:150px;"></textarea></div>
+        <div class="group"><label id="lb4">직인 업로드</label><input type="file" id="f-seal" accept="image/*" onchange="lS(event)"></div>
+        <div class="group"><label id="lb5">발신인</label><input type="text" id="i4" oninput="u()"></div>
+        <div class="btn-row">
+            <button class="btn btn-save" onclick="saveData()">데이터 저장</button>
+            <button class="btn btn-load" onclick="document.getElementById('f-data').click()">데이터 불러오기</button>
+            <input type="file" id="f-data" accept=".json" style="display:none;" onchange="loadData(event)">
         </div>
-        <div class="control-group">
-            <label>글자체 (FONT FAMILY)</label>
-            <select id="fontSel" onchange="u()">
-                <option value="'Malgun Gothic', sans-serif">맑은 고딕</option>
-                <option value="'Noto Serif KR', serif">바탕체</option>
-                <option value="'Arial', sans-serif">Arial</option>
-                <option value="'Times New Roman', serif">Times New Roman</option>
-                <option value="'SimSun', serif">宋体 (SimSun)</option
+    </div>
+    <div class="preview-area">
+        <div class="paper" id="p-doc">
+            <div id="urgent-stamp" class="urgent-mark">긴 급 / URGENT</div>
+            <div class="doc-header" id="o0">기 관 명</div>
+            <table class="info-table">
+                <tr><td width="100"><b id="tr">수 신 :</b> <span id="o1"></span></td></tr>
+                <tr><td><b id="tt">제 목 :</b> <span id="o2" style="font-weight: bold;"></span></td></tr>
+            </table>
+            <div class="main-text" id="o3"></div>
+            <div class="seal-area"><img id="o-seal" class="seal-img" src=""></div>
+            <div class="footer" id="o4">발신인 명의</div>
+            <div style="margin-top:40px; font-size:12px; border-top:1px solid #000; padding-top:10px;">
+                <span id="td">일자: </span> <span id="o-date"></span> | <span id="ta">기안: 임태훈</span>
+            </div>
+        </div>
+    </div>
+    <button class="print-btn" onclick="window.print()">보고서 PDF 발행</button>
+    <script>
+        const lp = {
+            ko: { b0:"기관명", b1:"수신", b2:"제목", b3:"본문", b4:"직인 업로드", b5:"발신인 명의", tr:"수 신 :", tt:"제 목 :", td:"일자: ", ta:"기안: 임태훈", ugn: "긴 급" },
+            en: { b0:"Organization", b1:"To", b2:"Subject", b3:"Body", b4:"Upload Seal", b5:"Signatory", tr:"To:", tt:"Sub:", td:"Date: ", ta:"Auth: T.Lim", ugn: "URGENT" },
+            cn: { b0:"发文机关", b1:"收件", b2:"标题", b3:"正文", b4:"上传印章", b5:"签署人", tr:"收件:", tt:"题目:", td:"日期: ", ta:"起草: 任泰勳", ugn: "紧 急" }
+        };
+        function cL() {
+            const l = lp[document.getElementById('lSel').value];
+            for(let i=0; i<=5; i++) { const target = document.getElementById('lb'+i); if(target) target.innerText = l['b'+i]; }
+            document.getElementById('tr').innerText = l.tr; document.getElementById('tt').innerText = l.tt;
+            document.getElementById('td').innerText = l.td; document.getElementById('ta').innerText = l.ta;
+            document.getElementById('urgent-stamp').innerText = l.ugn; u();
+        }
+        function lS(e) { const r = new FileReader(); r.onload = () => { const o = document.getElementById('o-seal'); o.src = r.result; o.style.display = 'block'; }; r.readAsDataURL(e.target.files[0]); }
+        function u() {
+            const p = document.getElementById('p-doc');
+            p.style.fontFamily = document.getElementById('fSel').value;
+            p.style.fontSize = document.getElementById('sSel').value + "px";
+            const t = document.getElementById('tSel').value;
+            const uStamp = document.getElementById('urgent-stamp');
+            uStamp.style.display = (t === 'urgent') ? 'block' : 'none';
+            let prefix = "";
+            if(t === 'initial') prefix = "[최초보고] ";
+            else if(t === 'interim') prefix = "[중간보고] ";
+            else if(t === 'final') prefix = "[최종보고] ";
+            else if(t === 'urgent') prefix = "[긴급] ";
+            for(let i=0; i<=4; i++) {
+                let val = document.getElementById('i'+i).value;
+                if(i===2) val = prefix + val;
+                document.getElementById('o'+i).innerText = val || "";
+            }
+        }
+        function saveData() {
+            const data = {};
+            for(let i=0; i<=4; i++) data['i'+i] = document.getElementById('i'+i).value;
+            data.lang = document.getElementById('lSel').value;
+            data.temp = document.getElementById('tSel').value;
+            data.font = document.getElementById('fSel').value;
+            data.size = document.getElementById('sSel').value;
+            const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'doc_data.json'; a.click();
+        }
+        function loadData(e) {
+            const r = new FileReader();
+            r.onload = () => {
+                const d = JSON.parse(r.target.result);
+                for(let i=0; i<=4; i++) document.getElementById('i'+i).value = d['i'+i] || "";
+                document.getElementById('lSel').value = d.lang; document.getElementById('tSel').value = d.temp;
+                document.getElementById('fSel').value = d.font; document.getElementById('sSel').value = d.size;
+                cL();
+            };
+            r.readAsText(e.target.files[0]);
+        }
+        document.getElementById('o-date').innerText = new Date().toLocaleDateString();
+        window.onload = () => { cL(); };
+    </script>
+</body>
+</html>
