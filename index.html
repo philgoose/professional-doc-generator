@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Global Administrative Master OS v4.0</title>
+    <title>Global Admin OS v5.0 - Knowledge Base Integrated</title>
     <style>
         :root { --navy: #0a192f; --gold: #c5a059; --bg: #222; --paper: #fff; }
         body { font-family: 'Malgun Gothic', sans-serif; margin: 0; background: var(--bg); display: flex; height: 100vh; color: #fff; overflow: hidden; }
@@ -18,24 +18,15 @@
         .preview-area { flex: 1; padding: 30px; overflow-y: auto; display: flex; justify-content: center; background: #333; }
         .paper { width: 210mm; min-height: 297mm; background: var(--paper); color: #000; padding: 25mm 20mm; box-shadow: 0 0 30px rgba(0,0,0,0.5); position: relative; transition: 0.3s; }
 
-        /* 양식 1: 표준형 (Government Standard) */
+        /* 양식 스타일 정의 */
         .style-standard .doc-header { text-align: center; font-weight: bold; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 25px; font-size: 32px; }
-        .style-standard .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; border-top: 2px solid #000; }
-        .style-standard .info-table td { border-bottom: 1px solid #ddd; padding: 10px 0; }
-
-        /* 양식 2: 간결형 (Simple/Efficient) */
         .style-simple .doc-header { text-align: left; font-weight: bold; color: #003366; border-left: 10px solid #003366; padding-left: 15px; margin-bottom: 30px; font-size: 26px; }
-        .style-simple .info-table { width: 100%; border: none; margin-bottom: 20px; background: #f9f9f9; padding: 10px; }
-        .style-simple .info-table td { border: none; padding: 5px; font-size: 13px; }
-
-        /* 양식 3: 현대형 (Modern Business) */
         .style-modern .doc-header { text-align: right; font-weight: lighter; color: #555; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 40px; font-size: 24px; text-transform: uppercase; }
-        .style-modern .info-table { width: 100%; display: flex; flex-direction: column; margin-bottom: 30px; border: none; }
-        .style-modern .info-table tr { display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; }
-        .style-modern .info-table td { border: none; }
 
         .urgent-mark { position: absolute; top: 30px; left: 30px; border: 3px solid red; color: red; padding: 5px 15px; font-weight: bold; font-size: 20px; display: none; transform: rotate(-5deg); z-index: 10; }
-        .main-text { line-height: 1.8; text-align: justify; min-height: 500px; white-space: pre-wrap; margin-top: 20px; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+        .info-table td { border-bottom: 1px solid #eee; padding: 8px 0; }
+        .main-text { line-height: 1.8; text-align: justify; min-height: 500px; white-space: pre-wrap; margin-top: 20px; font-size: 15px; }
         .seal-area { position: absolute; right: 50px; bottom: 100px; width: 80px; height: 80px; }
         .seal-img { width: 100%; height: 100%; object-fit: contain; opacity: 0.8; display: none; }
         .footer { text-align: center; font-weight: bold; margin-top: 50px; font-size: 22px; border-top: 2px solid #000; padding-top: 15px; }
@@ -45,21 +36,20 @@
 </head>
 <body>
     <div class="sidebar">
-        <h2>ADMIN MASTER OS v4.0</h2>
-        <div class="group"><label>양식 선택 (LAYOUT STYLE)</label><select id="styleSel" onchange="u()"><option value="style-standard">양식 1: 정부 표준형</option><option value="style-simple">양식 2: 간결 효율형</option><option value="style-modern">양식 3: 현대 비즈니스형</option></select></div>
-        <div class="group"><label>언어 / LANGUAGE</label><select id="lSel" onchange="cL()"><option value="ko">한국어</option><option value="en">English</option><option value="cn">中文</option></select></div>
-        <div class="group"><label>보고 단계 / STAGE</label><select id="tSel" onchange="u()"><option value="normal">일반</option><option value="initial">최초보고</option><option value="interim">중간보고</option><option value="final">최종보고</option><option value="urgent">긴급</option></select></div>
-        <div class="group"><label>글꼴 / FONT</label><select id="fSel" onchange="u()"><option value="'Malgun Gothic'">맑은 고딕</option><option value="'Noto Serif KR'">바탕체</option><option value="Arial">Arial</option><option value="SimSun">宋体</option></select></div>
+        <h2>ADMIN OS v5.0 (Sample Data)</h2>
+        <div class="group"><label>양식 (STYLE)</label><select id="styleSel" onchange="u()"><option value="style-standard">정부 표준형</option><option value="style-simple">간결 효율형</option><option value="style-modern">현대 비즈니스형</option></select></div>
+        <div class="group"><label>언어 (LANG)</label><select id="lSel" onchange="cL()"><option value="ko">한국어</option><option value="en">English</option><option value="cn">中文</option></select></div>
+        <div class="group"><label>보고 단계 (STAGE)</label><select id="tSel" onchange="applySample()"><option value="normal">일반</option><option value="initial">최초보고</option><option value="interim">중간보고</option><option value="final">최종보고</option><option value="urgent">긴급</option></select></div>
         <hr style="border:0.5px solid #444;">
         <div class="group"><label id="lb0">발신기관</label><input type="text" id="i0" oninput="u()"></div>
         <div class="group"><label id="lb1">수신</label><input type="text" id="i1" oninput="u()"></div>
         <div class="group"><label id="lb2">제목</label><input type="text" id="i2" oninput="u()"></div>
-        <div class="group"><label id="lb3">본문</label><textarea id="i3" oninput="u()" style="height:120px;"></textarea></div>
-        <div class="group"><label id="lb4">직인 업로드</label><input type="file" id="f-seal" accept="image/*" onchange="lS(event)"></div>
+        <div class="group"><label id="lb3">본문 (예시 자동입력됨)</label><textarea id="i3" oninput="u()" style="height:200px;"></textarea></div>
+        <div class="group"><label id="lb4">직인</label><input type="file" id="f-seal" accept="image/*" onchange="lS(event)"></div>
         <div class="group"><label id="lb5">발신인</label><input type="text" id="i4" oninput="u()"></div>
         <div class="btn-row">
-            <button class="btn btn-save" onclick="saveData()">데이터 저장</button>
-            <button class="btn btn-load" onclick="document.getElementById('f-data').click()">불러오기</button>
+            <button class="btn btn-save" onclick="saveData()">저장</button>
+            <button class="btn btn-load" onclick="document.getElementById('f-data').click()">로드</button>
             <input type="file" id="f-data" accept=".json" style="display:none;" onchange="loadData(event)">
         </div>
     </div>
@@ -82,13 +72,25 @@
     <button class="print-btn" onclick="window.print()">보고서 PDF 발행</button>
     <script>
         const lp = {
-            ko: { b0:"기관명", b1:"수신", b2:"제목", b3:"본문", b4:"직인 업로드", b5:"발신인 명의", tr:"수 신 :", tt:"제 목 :", td:"일자: ", ta:"기안: 임태훈", ugn: "긴 급" },
+            ko: { b0:"기관명", b1:"수신", b2:"제목", b3:"본문", b4:"직인", b5:"발신인 명의", tr:"수 신 :", tt:"제 목 :", td:"일자: ", ta:"기안: 임태훈", ugn: "긴 급" },
             en: { b0:"Org", b1:"To", b2:"Subject", b3:"Body", b4:"Seal", b5:"Signatory", tr:"To:", tt:"Sub:", td:"Date: ", ta:"Auth: T.Lim", ugn: "URGENT" },
-            cn: { b0:"发文机关", b1:"收件", b2:"标题", b3:"正文", b4:"上传印章", b5:"签署人", tr:"收件:", tt:"题目:", td:"日期: ", ta:"起草: 任泰勳", ugn: "紧 急" }
+            cn: { b0:"发文机关", b1:"收件", b2:"标题", b3:"正文", b4:"上传印장", b5:"签署人", tr:"收件:", tt:"题目:", td:"日期: ", ta:"起草: 任泰勳", ugn: "紧 急" }
         };
+        const samples = {
+            initial: "1. 추진 배경: 글로벌 시장 변화에 따른 신규 비즈니스 모델 구축 필요성 증대\n2. 주요 목적: 디지털 혁신을 통한 고객 경험 개선 및 운영 효율화\n3. 검토 사항: 향후 3개년 로드맵 수립 및 초기 예산 편성(안)",
+            interim: "1. 진행 현황: 1단계 인프라 구축 완료 및 사용자 테스트 진행 중\n2. 주요 성과: 기존 프로세스 대비 처리 속도 30% 향상 확인\n3. 향후 계획: 2단계 기능 고도화 및 파트너사 협업 모델 구체화",
+            final: "1. 사업 결과: 전사 디지털 전환(DT) 프로젝트 최종 완료\n2. 기대 효과: 연간 운영 비용 15억 원 절감 및 글로벌 표준 가이드라인 확립\n3. 결론: 본 프로젝트의 성과를 바탕으로 차년도 확장 사업 추진 건의",
+            urgent: "1. 상황 개요: 시스템 장애 발생에 따른 긴급 보안 점검 및 복구 작업 실시\n2. 조치 사항: 전 서버 보안 패치 적용 및 데이터 백업 무결성 검사 완료\n3. 요청 사항: 각 부서별 접속 단말기 보안 업데이트 즉시 시행 요망",
+            normal: "상기 건과 관련하여 다음과 같이 보고하오니 검토 후 승인하여 주시기 바랍니다.\n\n- 다 음 -\n1. 일시: 2026년 2월 10일\n2. 장소: 대회의실"
+        };
+        function applySample() {
+            const stage = document.getElementById('tSel').value;
+            document.getElementById('i3').value = samples[stage];
+            u();
+        }
         function cL() {
             const l = lp[document.getElementById('lSel').value];
-            for(let i=0; i<=5; i++) { const target = document.getElementById('lb'+i); if(target) target.innerText = l['b'+i]; }
+            for(let i=0; i<=5; i++) { const t = document.getElementById('lb'+i); if(t) t.innerText = l['b'+i]; }
             document.getElementById('tr').innerText = l.tr; document.getElementById('tt').innerText = l.tt;
             document.getElementById('td').innerText = l.td; document.getElementById('ta').innerText = l.ta;
             document.getElementById('urgent-stamp').innerText = l.ugn; u();
@@ -97,34 +99,31 @@
         function u() {
             const p = document.getElementById('p-doc');
             p.className = 'paper ' + document.getElementById('styleSel').value;
-            p.style.fontFamily = document.getElementById('fSel').value;
             const t = document.getElementById('tSel').value;
             document.getElementById('urgent-stamp').style.display = (t === 'urgent') ? 'block' : 'none';
             let prefix = {initial:"[최초보고] ", interim:"[중간보고] ", final:"[최종보고] ", urgent:"[긴급] "}[t] || "";
             for(let i=0; i<=4; i++) {
-                let val = document.getElementById('i'+i).value;
-                if(i===2) val = prefix + val;
-                document.getElementById('o'+i).innerText = val || "";
+                let v = document.getElementById('i'+i).value;
+                if(i===2) v = prefix + v;
+                document.getElementById('o'+i).innerText = v || "";
             }
         }
         function saveData() {
-            const d = {lang:document.getElementById('lSel').value, style:document.getElementById('styleSel').value, temp:document.getElementById('tSel').value};
-            for(let i=0; i<=4; i++) d['i'+i] = document.getElementById('i'+i).value;
-            const blob = new Blob([JSON.stringify(d)], {type:'application/json'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'admin_data.json'; a.click();
+            const d = {}; for(let i=0; i<=4; i++) d['i'+i] = document.getElementById('i'+i).value;
+            d.l = document.getElementById('lSel').value; d.s = document.getElementById('styleSel').value; d.t = document.getElementById('tSel').value;
+            const b = new Blob([JSON.stringify(d)], {type:'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'admin_v5_data.json'; a.click();
         }
         function loadData(e) {
-            const r = new FileReader();
-            r.onload = () => {
+            const r = new FileReader(); r.onload = () => {
                 const d = JSON.parse(r.target.result);
                 for(let i=0; i<=4; i++) document.getElementById('i'+i).value = d['i'+i] || "";
-                document.getElementById('lSel').value = d.lang; document.getElementById('styleSel').value = d.style; document.getElementById('tSel').value = d.temp;
+                document.getElementById('lSel').value = d.l; document.getElementById('styleSel').value = d.s; document.getElementById('tSel').value = d.t;
                 cL();
-            };
-            r.readAsText(e.target.files[0]);
+            }; r.readAsText(e.target.files[0]);
         }
         document.getElementById('o-date').innerText = new Date().toLocaleDateString();
-        window.onload = () => { cL(); };
+        window.onload = () => { cL(); applySample(); };
     </script>
 </body>
 </html>
