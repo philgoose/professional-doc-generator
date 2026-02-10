@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategic Executive Report Generator</title>
+    <style>
+        :root { --primary-blue: #002D62; --gold: #D4AF37; --light-gray: #f4f4f4; }
+        body { font-family: 'Pretendard', sans-serif; background: var(--light-gray); margin: 0; display: flex; height: 100vh; }
+        .editor { width: 40%; padding: 30px; background: white; border-right: 2px solid #ddd; overflow-y: auto; }
+        .preview-area { width: 60%; padding: 20px; overflow-y: auto; display: flex; justify-content: center; }
+        .report-page { width: 210mm; min-height: 297mm; background: white; padding: 60px; box-shadow: 0 0 20px rgba(0,0,0,0.1); box-sizing: border-box; position: relative; }
+        h1 { color: var(--primary-blue); border-bottom: 3px solid var(--primary-blue); padding-bottom: 10px; font-size: 28px; }
+        .meta-data { margin-bottom: 30px; font-size: 14px; text-align: right; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+        .section-title { color: var(--primary-blue); font-size: 18px; border-left: 5px solid var(--gold); padding-left: 10px; margin: 25px 0 10px 0; font-weight: bold; }
+        .content-box { font-size: 15px; line-height: 1.8; color: #333; white-space: pre-wrap; }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        textarea { height: 120px; }
+        .print-btn { position: fixed; bottom: 20px; right: 20px; padding: 15px 30px; background: var(--primary-blue); color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        @media print { .editor, .print-btn { display: none; } .preview-area { padding: 0; width: 100%; } .report-page { box-shadow: none; width: 100%; margin: 0; } }
+    </style>
+</head>
+<body>
+    <div class="editor">
+        <h2 style="color: var(--primary-blue);">Report Editor</h2>
+        <label>보고서 제목</label>
+        <input type="text" id="in-title" placeholder="프로젝트 전략 보고서" oninput="update()">
+        <label>작성자 / 소속</label>
+        <input type="text" id="in-author" placeholder="경영전략팀 홍길동" oninput="update()">
+        <label>Executive Summary (핵심 요약)</label>
+        <textarea id="in-summary" oninput="update()">이 보고서의 핵심 목적과 기대 효과를 입력하세요.</textarea>
+        <label>현황 분석 및 문제점</label>
+        <textarea id="in-analysis" oninput="update()">현재 시장 상황과 내부 데이터를 바탕으로 한 분석 결과입니다.</textarea>
+        <label>전략적 제언 (Recommendation)</label>
+        <textarea id="in-reco" oninput="update()">최고의 성과를 위해 실행해야 할 3가지 핵심 전략입니다.</textarea>
+    </div>
+    <div class="preview-area">
+        <div class="report-page" id="report">
+            <div class="meta-data">문서번호: <span id="out-id">2026-CONF-01</span><br>작성일자: <span id="out-date"></span><br>보안등급: 대외비(Confidential)</div>
+            <h1 id="out-title">프로젝트 전략 보고서</h1>
+            <p style="text-align: right; font-weight: bold;" id="out-author">경영전략팀 홍길동</p>
+            
+            <div class="section-title">1. Executive Summary</div>
+            <div class="content-box" id="out-summary">이 보고서의 핵심 목적과 기대 효과를 입력하세요.</div>
+            
+            <div class="section-title">2. Situation Analysis</div>
+            <div class="content-box" id="out-analysis">현재 시장 상황과 내부 데이터를 바탕으로 한 분석 결과입니다.</div>
+            
+            <div class="section-title">3. Strategic Recommendations</div>
+            <div class="content-box" id="out-reco">최고의 성과를 위해 실행해야 할 3가지 핵심 전략입니다.</div>
+            
+            <div style="margin-top: 50px; text-align: center; color: #999; font-size: 12px;">Copyright © 2026 Strategic Consulting Group. All Rights Reserved.</div>
+        </div>
+    </div>
+    <button class="print-btn" onclick="window.print()">보고서 PDF 출력</button>
+
+    <script>
+        document.getElementById('out-date').innerText = new Date().toLocaleDateString();
+        function update() {
+            document.getElementById('out-title').innerText = document.getElementById('in-title').value || '제목 없음';
+            document.getElementById('out-author').innerText = document.getElementById('in-author').value || '작성자 미입력';
+            document.getElementById('out-summary').innerText = document.getElementById('in-summary').value;
+            document.getElementById('out-analysis').innerText = document.getElementById('in-analysis').value;
+            document.getElementById('out-reco').innerText = document.getElementById('in-reco').value;
+        }
+    </script>
+</body>
+</html>
