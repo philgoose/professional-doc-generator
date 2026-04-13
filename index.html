@@ -14,30 +14,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @page { size: A4; margin: 0; }
-        @media print { 
-            .no-print { display: none !important; } 
+        @media print {
+            .no-print { display: none !important; }
             .print-area { padding: 0 !important; margin: 0 !important; }
             body { background: white !important; }
         }
-        
+       
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+       
         body {
             background: #0a0e14;
             color: #d4d4d4;
             font-family: 'JetBrains Mono', monospace;
             overflow: hidden;
         }
-
         .neo-glow {
             box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
         }
-
         .gradient-border {
             position: relative;
             background: linear-gradient(135deg, #0a0e14 0%, #151b24 100%);
         }
-        
+       
         .gradient-border::before {
             content: '';
             position: absolute;
@@ -49,7 +47,6 @@
             mask-composite: exclude;
             pointer-events: none;
         }
-
         .document-canvas {
             width: 210mm;
             min-height: 297mm;
@@ -60,10 +57,8 @@
             font-family: 'Crimson Pro', serif;
             border: 1px solid #e5e7eb;
         }
-
         .mono { font-family: 'JetBrains Mono', monospace; }
         .display { font-family: 'Archivo Black', sans-serif; }
-
         .toast {
             position: fixed;
             bottom: 20px;
@@ -77,32 +72,26 @@
             animation: slideIn 0.3s ease-out;
             z-index: 9999;
         }
-
         @keyframes slideIn {
             from { transform: translateX(400px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-
         @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.3); }
             50% { box-shadow: 0 0 40px rgba(34, 211, 238, 0.6); }
         }
-
         .status-indicator {
             animation: pulse-glow 2s infinite;
         }
-
         /* 스크롤바 커스텀 */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #0a0e14; }
         ::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
-
         /* 선택 텍스트 */
         ::selection { background: #22d3ee; color: #0a0e14; }
-
         .grid-bg {
-            background-image: 
+            background-image:
                 linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
             background-size: 20px 20px;
@@ -111,14 +100,12 @@
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo, useCallback, useReducer } = React;
 
         // ═══════════════════════════════════════════════════════════════
         // 🎯 CONSTANTS & CONFIGURATION
         // ═══════════════════════════════════════════════════════════════
-
         const TEMPLATES = {
             LECTURE_CURRICULUM: {
                 id: 'LECTURE_CURRICULUM',
@@ -150,7 +137,7 @@
                 icon: '⚙️',
                 category: 'engineering',
                 fields: ['organization', 'recipient', 'title', 'content', 'author', 'version', 'api_version'],
-                defaultContent: `## API 명세서 v2.0\n\n### 인증 엔드포인트\n**POST** /api/v2/auth/login\n\`\`\`json\n{\n  "email": "user@example.com",\n  "password": "***",\n  "mfa_token": "123456"\n}\n\`\`\`\n\nResponse: 200 OK\n\`\`\`json\n{\n  "access_token": "eyJ...",\n  "refresh_token": "eyJ...",\n  "expires_in": 3600\n}\n\`\`\`\n\n### 사용자 리소스\n**GET** /api/v2/users/{id}\n\nHeaders:\n- Authorization: Bearer {token}\n- X-API-Version: 2.0\n\n**Rate Limit**: 1000 req/hour`
+                defaultContent: `## API 명세서 v2.0\n\n### 인증 엔드포인트\n**POST** /api/v2/auth/login\n\`\`\`json\n{\n "email": "user@example.com",\n "password": "***",\n "mfa_token": "123456"\n}\n\`\`\`\n\nResponse: 200 OK\n\`\`\`json\n{\n "access_token": "eyJ...",\n "refresh_token": "eyJ...",\n "expires_in": 3600\n}\n\`\`\`\n\n### 사용자 리소스\n**GET** /api/v2/users/{id}\n\nHeaders:\n- Authorization: Bearer {token}\n- X-API-Version: 2.0\n\n**Rate Limit**: 1000 req/hour`
             },
             PROJECT_PROPOSAL: {
                 id: 'PROJECT_PROPOSAL',
@@ -192,37 +179,29 @@
                 fields: ['organization', 'company', 'title', 'content', 'author', 'rating', 'target_price', 'current_price'],
                 isSecurities: true,
                 defaultContent: `## 투자의견 및 목표주가
-
-투자의견: BUY (신규)\n목표주가: 85,000원\n현재주가: 68,500원 (2025.02.11 기준)\n상승여력: 24.1%
-
+투자의견: BUY (신규)
+목표주가: 85,000원
+현재주가: 68,500원 (2025.02.11 기준)
+상승여력: 24.1%
 ## Investment Thesis
-
 동사는 AI 반도체 시장의 급성장에 따라 2025년 실적 모멘텀이 강화될 전망입니다. 주요 고객사의 차세대 데이터센터 투자 확대와 HBM(고대역폭 메모리) 수요 증가가 긍정적입니다.
-
 ### 핵심 투자 포인트
-
 1. **AI 반도체 슈퍼사이클 수혜**
    - 글로벌 AI 서버 출하량 YoY +45% 예상
    - HBM3E 매출 비중 2024년 15% → 2025년 32%
-
 2. **실적 개선 가시화**
    - 2025년 영업이익률 23.5% 전망 (2024년 18.2%)
    - 1분기 영업이익 YoY +127% 예상
-
 3. **밸류에이션 매력**
    - 현재 P/E 14.2배 (과거 5년 평균 18.5배)
    - P/B 1.8배로 동종업계 대비 30% 할인
-
 ## 재무전망 (단위: 억원)
-
 구분 | 2023 | 2024E | 2025F | 2026F
 매출액 | 45,230 | 52,180 | 64,850 | 76,200
 영업이익 | 7,850 | 9,497 | 15,240 | 19,050
 순이익 | 6,120 | 7,344 | 11,780 | 14,730
 EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
-
 ## 리스크 요인
-
 - 주요 고객사 수주 지연 가능성
 - 환율 변동성 (달러당 ±100원 시 영업이익 8% 변동)
 - 중국 경기 둔화에 따른 수요 감소`
@@ -230,15 +209,11 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
         };
 
         const STORAGE_KEY = 'prodoc_documents';
-        const AUTOSAVE_INTERVAL = 3000; // 3초마다 자동 저장
+        const AUTOSAVE_INTERVAL = 3000;
 
         // ═══════════════════════════════════════════════════════════════
         // 🔧 CUSTOM HOOKS
         // ═══════════════════════════════════════════════════════════════
-
-        /**
-         * 로컬 스토리지 동기화 훅
-         */
         const useLocalStorage = (key, initialValue) => {
             const [storedValue, setStoredValue] = useState(() => {
                 try {
@@ -249,7 +224,6 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                     return initialValue;
                 }
             });
-
             const setValue = useCallback((value) => {
                 try {
                     const valueToStore = value instanceof Function ? value(storedValue) : value;
@@ -259,121 +233,122 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                     console.error('LocalStorage 쓰기 오류:', error);
                 }
             }, [key, storedValue]);
-
             return [storedValue, setValue];
         };
 
-        /**
-         * 키보드 단축키 훅
-         */
         const useKeyboardShortcut = (callback, keys) => {
             useEffect(() => {
                 const handleKeyPress = (e) => {
                     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
                     const modifierKey = isMac ? e.metaKey : e.ctrlKey;
-                    
                     if (modifierKey && keys.includes(e.key.toLowerCase())) {
                         e.preventDefault();
                         callback();
                     }
                 };
-
                 window.addEventListener('keydown', handleKeyPress);
                 return () => window.removeEventListener('keydown', handleKeyPress);
             }, [callback, keys]);
         };
 
-        /**
-         * 자동 저장 훅
-         */
         const useAutoSave = (data, callback, delay = AUTOSAVE_INTERVAL) => {
             useEffect(() => {
                 const timer = setTimeout(() => {
                     callback(data);
                 }, delay);
-
                 return () => clearTimeout(timer);
             }, [data, callback, delay]);
         };
 
         // ═══════════════════════════════════════════════════════════════
-        // 🔧 UTILITY FUNCTIONS
+        // 🔧 UTILITY FUNCTIONS (개선됨)
         // ═══════════════════════════════════════════════════════════════
-
         /**
-         * 마크다운 테이블을 HTML로 변환
+         * 마크다운 테이블 파서 - 투자 리포트 테이블(파이프 없이도 인식) 완벽 지원
          */
         const parseMarkdownTable = (text) => {
-            const lines = text.split('\n');
+            const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
             const tables = [];
-            let currentTable = null;
-            
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].trim();
-                
-                // 테이블 행 감지 (| 로 시작하고 끝남)
-                if (line.startsWith('|') && line.endsWith('|')) {
-                    const cells = line.split('|').filter(cell => cell.trim() !== '').map(cell => cell.trim());
-                    
-                    if (!currentTable) {
-                        currentTable = { headers: cells, rows: [] };
-                    } else if (cells.every(cell => cell.match(/^[-:]+$/))) {
-                        // 구분선은 무시
-                        continue;
-                    } else {
-                        currentTable.rows.push(cells);
+            let i = 0;
+
+            while (i < lines.length) {
+                const line = lines[i];
+                // 테이블 감지: | 가 3개 이상 포함된 줄
+                if (line.includes('|') && (line.match(/\|/g) || []).length >= 3) {
+                    let j = i;
+                    const tableLines = [];
+
+                    while (j < lines.length) {
+                        const l = lines[j];
+                        if (l.includes('|') && (l.match(/\|/g) || []).length >= 3) {
+                            tableLines.push(l);
+                            j++;
+                        } else {
+                            break;
+                        }
                     }
-                } else if (currentTable) {
-                    // 테이블 종료
-                    tables.push(currentTable);
-                    currentTable = null;
+
+                    if (tableLines.length >= 2) {
+                        let headers = tableLines[0].split('|').map(c => c.trim()).filter(Boolean);
+                        let rowStart = 1;
+
+                        // 구분선(---) 스킵
+                        if (tableLines[1] && tableLines[1].match(/^[\s|:-]+$/)) {
+                            rowStart = 2;
+                        }
+
+                        const rows = tableLines.slice(rowStart).map(row =>
+                            row.split('|').map(c => c.trim()).filter(Boolean)
+                        ).filter(row => row.length > 0 && row.length === headers.length);
+
+                        if (headers.length > 0) {
+                            tables.push({ headers, rows });
+                        }
+                    }
+                    i = j;
+                    continue;
                 }
+                i++;
             }
-            
-            if (currentTable) {
-                tables.push(currentTable);
-            }
-            
             return tables;
         };
 
         /**
-         * 증권 보고서용 컨텐츠 렌더러 (테이블 강조)
+         * 증권 보고서용 컨텐츠 렌더러 (테이블 자동 인식 + 개선된 분리 로직)
          */
         const SecuritiesContentRenderer = ({ content }) => {
             const tables = parseMarkdownTable(content);
-            
-            if (tables.length === 0) {
-                return <div className="whitespace-pre-wrap">{content}</div>;
-            }
-            
-            // 테이블이 있는 경우, 텍스트와 테이블을 분리해서 렌더링
+            const lines = content.split('\n');
             const parts = [];
             let lastIndex = 0;
-            const lines = content.split('\n');
             let lineIndex = 0;
-            
+
             while (lineIndex < lines.length) {
-                const line = lines[lineIndex];
-                
-                if (line.trim().startsWith('|')) {
-                    // 테이블 시작
+                const trimmed = lines[lineIndex].trim();
+
+                // 개선된 테이블 감지
+                if (trimmed.includes('|') && (trimmed.match(/\|/g) || []).length >= 3) {
                     const tableStart = lineIndex;
-                    let tableEnd = lineIndex;
-                    
-                    while (tableEnd < lines.length && lines[tableEnd].trim().startsWith('|')) {
-                        tableEnd++;
+                    let tableEnd = lineIndex + 1;
+
+                    while (tableEnd < lines.length) {
+                        const nextTrim = lines[tableEnd].trim();
+                        if (nextTrim.includes('|') && (nextTrim.match(/\|/g) || []).length >= 3) {
+                            tableEnd++;
+                        } else {
+                            break;
+                        }
                     }
-                    
-                    // 테이블 전 텍스트
+
+                    // 테이블 이전 텍스트
                     if (tableStart > lastIndex) {
                         parts.push({
                             type: 'text',
                             content: lines.slice(lastIndex, tableStart).join('\n')
                         });
                     }
-                    
-                    // 테이블 추가
+
+                    // 테이블 파싱
                     const tableText = lines.slice(tableStart, tableEnd).join('\n');
                     const parsedTables = parseMarkdownTable(tableText);
                     if (parsedTables.length > 0) {
@@ -382,27 +357,27 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                             data: parsedTables[0]
                         });
                     }
-                    
+
                     lastIndex = tableEnd;
                     lineIndex = tableEnd;
                 } else {
                     lineIndex++;
                 }
             }
-            
-            // 마지막 텍스트
+
+            // 마지막 남은 텍스트
             if (lastIndex < lines.length) {
                 parts.push({
                     type: 'text',
                     content: lines.slice(lastIndex).join('\n')
                 });
             }
-            
+
             return (
                 <div>
                     {parts.map((part, idx) => {
                         if (part.type === 'text') {
-                            return <div key={idx} className="whitespace-pre-wrap mb-4">{part.content}</div>;
+                            return <div key={idx} className="whitespace-pre-wrap mb-4 text-gray-800 leading-relaxed">{part.content}</div>;
                         } else {
                             return (
                                 <div key={idx} className="my-6 overflow-x-auto">
@@ -437,14 +412,11 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
         };
 
         // ═══════════════════════════════════════════════════════════════
-        // 📦 STATE MANAGEMENT (Reducer Pattern)
+        // 📦 STATE MANAGEMENT
         // ═══════════════════════════════════════════════════════════════
-
         const initialState = {
             documents: [],
             currentDocId: null,
-            history: [],
-            historyIndex: -1,
             lastSaved: null
         };
 
@@ -453,9 +425,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
             UPDATE_DOCUMENT: 'UPDATE_DOCUMENT',
             DELETE_DOCUMENT: 'DELETE_DOCUMENT',
             SELECT_DOCUMENT: 'SELECT_DOCUMENT',
-            LOAD_DOCUMENTS: 'LOAD_DOCUMENTS',
-            UNDO: 'UNDO',
-            REDO: 'REDO'
+            LOAD_DOCUMENTS: 'LOAD_DOCUMENTS'
         };
 
         function documentReducer(state, action) {
@@ -489,7 +459,6 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                         documents: [...state.documents, newDoc],
                         currentDocId: newDoc.id
                     };
-
                 case actionTypes.UPDATE_DOCUMENT:
                     return {
                         ...state,
@@ -500,7 +469,6 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                         ),
                         lastSaved: new Date()
                     };
-
                 case actionTypes.DELETE_DOCUMENT:
                     const remainingDocs = state.documents.filter(doc => doc.id !== action.payload.id);
                     return {
@@ -508,20 +476,17 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                         documents: remainingDocs,
                         currentDocId: remainingDocs.length > 0 ? remainingDocs[0].id : null
                     };
-
                 case actionTypes.SELECT_DOCUMENT:
                     return {
                         ...state,
                         currentDocId: action.payload.id
                     };
-
                 case actionTypes.LOAD_DOCUMENTS:
                     return {
                         ...state,
                         documents: action.payload.documents,
                         currentDocId: action.payload.documents.length > 0 ? action.payload.documents[0].id : null
                     };
-
                 default:
                     return state;
             }
@@ -530,13 +495,11 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
         // ═══════════════════════════════════════════════════════════════
         // 🎨 UI COMPONENTS
         // ═══════════════════════════════════════════════════════════════
-
         const Toast = ({ message, onClose }) => {
             useEffect(() => {
                 const timer = setTimeout(onClose, 2000);
                 return () => clearTimeout(timer);
             }, [onClose]);
-
             return <div className="toast no-print">{message}</div>;
         };
 
@@ -582,9 +545,8 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
         );
 
         // ═══════════════════════════════════════════════════════════════
-        // 🏗️ MAIN APPLICATION
+        // 🏗️ MAIN APPLICATION (보완 완료)
         // ═══════════════════════════════════════════════════════════════
-
         const ProDocEngine = () => {
             const [state, dispatch] = useReducer(documentReducer, initialState);
             const [savedDocs, setSavedDocs] = useLocalStorage(STORAGE_KEY, []);
@@ -598,10 +560,9 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 if (savedDocs.length > 0) {
                     dispatch({ type: actionTypes.LOAD_DOCUMENTS, payload: { documents: savedDocs } });
                 } else {
-                    // 기본 문서 생성
-                    dispatch({ 
-                        type: actionTypes.CREATE_DOCUMENT, 
-                        payload: { templateId: 'LECTURE_CURRICULUM' } 
+                    dispatch({
+                        type: actionTypes.CREATE_DOCUMENT,
+                        payload: { templateId: 'LECTURE_CURRICULUM' }
                     });
                 }
             }, []);
@@ -613,19 +574,16 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 }
             });
 
-            // 현재 문서
-            const currentDoc = useMemo(() => 
+            const currentDoc = useMemo(() =>
                 state.documents.find(doc => doc.id === state.currentDocId),
                 [state.documents, state.currentDocId]
             );
 
-            // 템플릿 정보
-            const currentTemplate = useMemo(() => 
+            const currentTemplate = useMemo(() =>
                 currentDoc ? TEMPLATES[currentDoc.templateId] : null,
                 [currentDoc]
             );
 
-            // 문서 업데이트
             const updateField = useCallback((field, value) => {
                 if (!currentDoc) return;
                 dispatch({
@@ -637,27 +595,24 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 });
             }, [currentDoc]);
 
-            // 새 문서 생성
             const createNewDocument = useCallback((templateId) => {
                 dispatch({ type: actionTypes.CREATE_DOCUMENT, payload: { templateId } });
-                setToast('새 문서가 생성되었습니다');
+                setToast('✅ 새 문서가 생성되었습니다');
             }, []);
 
-            // 문서 삭제
             const deleteDocument = useCallback((id) => {
                 if (state.documents.length === 1) {
-                    setToast('마지막 문서는 삭제할 수 없습니다');
+                    setToast('⚠️ 마지막 문서는 삭제할 수 없습니다');
                     return;
                 }
                 dispatch({ type: actionTypes.DELETE_DOCUMENT, payload: { id } });
-                setToast('문서가 삭제되었습니다');
+                setToast('🗑️ 문서가 삭제되었습니다');
             }, [state.documents.length]);
 
             // PDF 내보내기
             const exportToPDF = useCallback(() => {
                 if (!printRef.current) return;
-                setToast('PDF를 생성 중입니다...');
-                
+                setToast('📄 PDF 생성 중...');
                 const element = printRef.current;
                 const opt = {
                     margin: 0,
@@ -666,66 +621,59 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                     html2canvas: { scale: 2, useCORS: true, letterRendering: true },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
-
                 html2pdf().set(opt).from(element).save().then(() => {
-                    setToast('PDF 다운로드 완료');
+                    setToast('🎉 PDF 다운로드 완료');
                 }).catch(err => {
                     console.error('PDF export error:', err);
-                    setToast('PDF 생성 중 오류가 발생했습니다');
+                    setToast('❌ PDF 생성 중 오류');
                 });
             }, [currentDoc]);
 
-            // 인장 렌더링
+            // 인장 렌더링 (더 선명하게)
             const renderSeal = useCallback(() => {
                 const canvas = canvasRef.current;
                 if (!canvas) return;
-                
                 const ctx = canvas.getContext('2d');
                 const dpr = window.devicePixelRatio || 1;
                 canvas.width = 200 * dpr;
                 canvas.height = 200 * dpr;
                 ctx.scale(dpr, dpr);
-                
                 ctx.clearRect(0, 0, 200, 200);
-                
-                // 외곽선 (더 두껍게)
+
+                // 외곽 원 (더 두껍고 선명)
                 ctx.strokeStyle = '#dc2626';
-                ctx.lineWidth = 5;
+                ctx.lineWidth = 6;
                 ctx.beginPath();
                 ctx.arc(100, 100, 78, 0, Math.PI * 2);
                 ctx.stroke();
-                
-                // 중간 원
-                ctx.strokeStyle = '#dc2626';
-                ctx.lineWidth = 2;
+
+                ctx.lineWidth = 2.5;
                 ctx.beginPath();
                 ctx.arc(100, 100, 68, 0, Math.PI * 2);
                 ctx.stroke();
-                
-                // 내부 원
-                ctx.strokeStyle = '#dc2626';
+
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
                 ctx.arc(100, 100, 55, 0, Math.PI * 2);
                 ctx.stroke();
-                
-                // 텍스트 (더 격식있게)
+
+                // 텍스트
                 ctx.fillStyle = '#dc2626';
                 ctx.textAlign = 'center';
                 ctx.font = 'bold 14px JetBrains Mono';
                 ctx.fillText('DIRECTOR', 100, 78);
-                ctx.font = 'bold 30px serif';
-                ctx.fillText('임채훈', 100, 115);
-                ctx.font = 'bold 11px JetBrains Mono';
-                ctx.fillText('印', 100, 135);
+                ctx.font = 'bold 32px serif';
+                ctx.fillText('임채훈', 100, 118);
+                ctx.font = 'bold 12px JetBrains Mono';
+                ctx.fillText('印', 100, 140);
             }, []);
 
             useEffect(() => { renderSeal(); }, [renderSeal]);
 
-            // 키보드 단축키
+            // 단축키
             useKeyboardShortcut(() => {
                 setSavedDocs(state.documents);
-                setToast('수동 저장 완료');
+                setToast('💾 수동 저장 완료');
             }, ['s']);
 
             useKeyboardShortcut(() => {
@@ -747,7 +695,6 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 <div className="flex h-screen w-full overflow-hidden grid-bg">
                     {/* 사이드바 */}
                     <aside className={`${sidebarCollapsed ? 'w-16' : 'w-[420px]'} bg-[#0a0e14] border-r border-[#22d3ee]/20 flex flex-col transition-all duration-300 no-print`}>
-                        {/* 헤더 */}
                         <div className="p-6 border-b border-[#22d3ee]/20">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
@@ -755,7 +702,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                     {!sidebarCollapsed && (
                                         <div>
                                             <h1 className="font-black text-[#22d3ee] tracking-tight display text-lg">PRODOC</h1>
-                                            <p className="text-[9px] text-gray-500 mono">Enterprise v2.0</p>
+                                            <p className="text-[9px] text-gray-500 mono">Enterprise v2.1</p>
                                         </div>
                                     )}
                                 </div>
@@ -766,22 +713,19 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                     {sidebarCollapsed ? '→' : '←'}
                                 </button>
                             </div>
-
                             {!sidebarCollapsed && (
-                                <div className="flex gap-2">
-                                    <select
-                                        className="flex-1 bg-[#151b24] border border-[#22d3ee]/30 rounded-lg p-2.5 text-xs text-gray-200 focus:border-[#22d3ee] outline-none mono"
-                                        onChange={(e) => createNewDocument(e.target.value)}
-                                        value=""
-                                    >
-                                        <option value="" disabled>+ 새 문서</option>
-                                        {Object.entries(TEMPLATES).map(([key, tmpl]) => (
-                                            <option key={key} value={key}>
-                                                {tmpl.icon} {tmpl.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <select
+                                    className="w-full bg-[#151b24] border border-[#22d3ee]/30 rounded-lg p-2.5 text-xs text-gray-200 focus:border-[#22d3ee] outline-none mono"
+                                    onChange={(e) => createNewDocument(e.target.value)}
+                                    value=""
+                                >
+                                    <option value="" disabled>+ 새 문서 생성</option>
+                                    {Object.entries(TEMPLATES).map(([key, tmpl]) => (
+                                        <option key={key} value={key}>
+                                            {tmpl.icon} {tmpl.name}
+                                        </option>
+                                    ))}
+                                </select>
                             )}
                         </div>
 
@@ -844,95 +788,24 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                     {currentTemplate?.isSecurities ? (
                                         /* 증권 보고서 전용 필드 */
                                         <>
-                                            <FieldInput
-                                                label="기업명"
-                                                value={currentDoc.data.company || ''}
-                                                onChange={(v) => updateField('company', v)}
-                                                placeholder="예: 삼성전자"
-                                            />
-
-                                            <FieldInput
-                                                label="리포트 제목"
-                                                value={currentDoc.data.title || ''}
-                                                onChange={(v) => updateField('title', v)}
-                                                placeholder="예: AI 반도체 슈퍼사이클 진입"
-                                            />
-
+                                            <FieldInput label="기업명" value={currentDoc.data.company || ''} onChange={(v) => updateField('company', v)} placeholder="예: 삼성전자" />
+                                            <FieldInput label="리포트 제목" value={currentDoc.data.title || ''} onChange={(v) => updateField('title', v)} placeholder="예: AI 반도체 슈퍼사이클 진입" />
                                             <div className="grid grid-cols-2 gap-3">
-                                                <FieldInput
-                                                    label="투자의견"
-                                                    value={currentDoc.data.rating || ''}
-                                                    onChange={(v) => updateField('rating', v)}
-                                                    placeholder="BUY/HOLD/SELL"
-                                                />
-                                                <FieldInput
-                                                    label="목표주가"
-                                                    value={currentDoc.data.target_price || ''}
-                                                    onChange={(v) => updateField('target_price', v)}
-                                                    placeholder="85,000"
-                                                />
+                                                <FieldInput label="투자의견" value={currentDoc.data.rating || ''} onChange={(v) => updateField('rating', v)} placeholder="BUY/HOLD/SELL" />
+                                                <FieldInput label="목표주가" value={currentDoc.data.target_price || ''} onChange={(v) => updateField('target_price', v)} placeholder="85,000" />
                                             </div>
-
-                                            <FieldInput
-                                                label="현재주가"
-                                                value={currentDoc.data.current_price || ''}
-                                                onChange={(v) => updateField('current_price', v)}
-                                                placeholder="68,500"
-                                            />
-
-                                            <FieldInput
-                                                label="분석 내용"
-                                                type="textarea"
-                                                value={currentDoc.data.content || ''}
-                                                onChange={(v) => updateField('content', v)}
-                                                placeholder="투자 의견, 재무 분석, 리스크 요인 등을 작성하세요..."
-                                            />
-
-                                            <FieldInput
-                                                label="애널리스트"
-                                                value={currentDoc.data.author || ''}
-                                                onChange={(v) => updateField('author', v)}
-                                                placeholder="예: 임채훈 수석 애널리스트"
-                                            />
+                                            <FieldInput label="현재주가" value={currentDoc.data.current_price || ''} onChange={(v) => updateField('current_price', v)} placeholder="68,500" />
+                                            <FieldInput label="분석 내용" type="textarea" value={currentDoc.data.content || ''} onChange={(v) => updateField('content', v)} placeholder="투자 의견, 재무 분석, 리스크 요인 등을 작성하세요..." />
+                                            <FieldInput label="애널리스트" value={currentDoc.data.author || ''} onChange={(v) => updateField('author', v)} placeholder="예: 임채훈 수석 애널리스트" />
                                         </>
                                     ) : (
                                         /* 일반 문서 필드 */
                                         <>
-                                            <FieldInput
-                                                label="조직/기관명"
-                                                value={currentDoc.data.organization || ''}
-                                                onChange={(v) => updateField('organization', v)}
-                                                placeholder="예: 한국기술교육원"
-                                            />
-
-                                            <FieldInput
-                                                label="수신자"
-                                                value={currentDoc.data.recipient || ''}
-                                                onChange={(v) => updateField('recipient', v)}
-                                                placeholder="예: 홍길동 책임연구원"
-                                            />
-
-                                            <FieldInput
-                                                label="문서 제목"
-                                                value={currentDoc.data.title || ''}
-                                                onChange={(v) => updateField('title', v)}
-                                                placeholder="예: 2025년 상반기 교육과정 안내"
-                                            />
-
-                                            <FieldInput
-                                                label="본문 내용"
-                                                type="textarea"
-                                                value={currentDoc.data.content || ''}
-                                                onChange={(v) => updateField('content', v)}
-                                                placeholder="본문 내용을 입력하세요..."
-                                            />
-
-                                            <FieldInput
-                                                label="발신자 (서명)"
-                                                value={currentDoc.data.author || ''}
-                                                onChange={(v) => updateField('author', v)}
-                                                placeholder="예: 임채훈 원장"
-                                            />
+                                            <FieldInput label="조직/기관명" value={currentDoc.data.organization || ''} onChange={(v) => updateField('organization', v)} placeholder="예: 한국기술교육원" />
+                                            <FieldInput label="수신자" value={currentDoc.data.recipient || ''} onChange={(v) => updateField('recipient', v)} placeholder="예: 홍길동 책임연구원" />
+                                            <FieldInput label="문서 제목" value={currentDoc.data.title || ''} onChange={(v) => updateField('title', v)} placeholder="예: 2025년 상반기 교육과정 안내" />
+                                            <FieldInput label="본문 내용" type="textarea" value={currentDoc.data.content || ''} onChange={(v) => updateField('content', v)} placeholder="본문 내용을 입력하세요..." />
+                                            <FieldInput label="발신자 (서명)" value={currentDoc.data.author || ''} onChange={(v) => updateField('author', v)} placeholder="예: 임채훈 원장" />
                                         </>
                                     )}
                                 </div>
@@ -951,7 +824,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                     >
                                         🖨️ 인쇄 / PDF 저장 (Ctrl+P)
                                     </button>
-                                    
+
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             onClick={() => {
@@ -962,7 +835,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                                 a.href = url;
                                                 a.download = `${currentDoc.data.title || 'document'}.json`;
                                                 a.click();
-                                                setToast('JSON 내보내기 완료');
+                                                setToast('📦 JSON 내보내기 완료');
                                             }}
                                             className="bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-2 px-3 rounded-lg border border-[#22d3ee]/30 transition-all mono text-xs"
                                         >
@@ -977,29 +850,27 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                                 a.href = url;
                                                 a.download = `${currentDoc.data.title || 'document'}.txt`;
                                                 a.click();
-                                                setToast('텍스트 내보내기 완료');
+                                                setToast('📝 TXT 내보내기 완료');
                                             }}
                                             className="bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-2 px-3 rounded-lg border border-[#22d3ee]/30 transition-all mono text-xs"
                                         >
                                             📝 TXT
                                         </button>
                                     </div>
-                                    
+
                                     <button
                                         onClick={() => {
                                             setSavedDocs(state.documents);
-                                            setToast('모든 문서 저장 완료');
+                                            setToast('💾 모든 문서 저장 완료');
                                         }}
                                         className="w-full bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-3 px-4 rounded-lg border border-[#22d3ee]/30 transition-all mono text-sm"
                                     >
                                         💾 저장 (Ctrl+S)
                                     </button>
-                                    
-                                    {/* 템플릿 빠른 전환 */}
+
+                                    {/* Quick Templates */}
                                     <div className="border-t border-[#22d3ee]/20 pt-3 mt-3">
-                                        <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-2 mono">
-                                            Quick Templates
-                                        </p>
+                                        <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-2 mono">Quick Templates</p>
                                         <div className="grid grid-cols-4 gap-1">
                                             {Object.entries(TEMPLATES).slice(0, 8).map(([key, tmpl]) => (
                                                 <button
@@ -1025,20 +896,13 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                     <main className="flex-1 bg-[#0d1117] overflow-y-auto flex flex-col print-area">
                         <div ref={printRef} className="flex-1 flex justify-center items-start p-12">
                             {currentTemplate?.isSecurities ? (
-                                /* ═══════════════════════════════════════
-                                   한화투자증권 스타일 레이아웃
-                                   ═══════════════════════════════════════ */
+                                /* 한화투자증권 스타일 */
                                 <section className="document-canvas shadow-2xl">
-                                    {/* 증권사 헤더 */}
                                     <div className="bg-gradient-to-r from-red-700 to-red-600 px-12 py-8">
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <h1 className="text-4xl font-black text-white display tracking-tight">
-                                                    한화투자증권
-                                                </h1>
-                                                <p className="text-red-100 text-sm mt-1 mono font-semibold">
-                                                    HANWHA INVESTMENT & SECURITIES
-                                                </p>
+                                                <h1 className="text-4xl font-black text-white display tracking-tight">한화투자증권</h1>
+                                                <p className="text-red-100 text-sm mt-1 mono font-semibold">HANWHA INVESTMENT & SECURITIES</p>
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-white text-xs font-bold mono">Research Center</p>
@@ -1047,16 +911,11 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                         </div>
                                     </div>
 
-                                    {/* 기업 정보 헤더 */}
                                     <div className="bg-gray-50 border-b-4 border-red-600 px-12 py-6">
                                         <div className="flex justify-between items-end">
                                             <div>
-                                                <h2 className="text-3xl font-black text-gray-900 mb-1">
-                                                    {currentDoc.data.company || '기업명'}
-                                                </h2>
-                                                <p className="text-gray-600 text-sm font-semibold">
-                                                    {currentDoc.data.title}
-                                                </p>
+                                                <h2 className="text-3xl font-black text-gray-900 mb-1">{currentDoc.data.company || '기업명'}</h2>
+                                                <p className="text-gray-600 text-sm font-semibold">{currentDoc.data.title}</p>
                                             </div>
                                             <div className="text-right">
                                                 <div className="bg-red-600 text-white px-6 py-2 rounded-lg inline-block">
@@ -1067,20 +926,15 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                         </div>
                                     </div>
 
-                                    {/* 핵심 지표 */}
                                     <div className="px-12 py-6 bg-white border-b border-gray-200">
                                         <div className="grid grid-cols-4 gap-6">
                                             <div className="border-l-4 border-red-600 pl-4">
                                                 <p className="text-xs text-gray-500 font-semibold mb-1">목표주가</p>
-                                                <p className="text-2xl font-black text-red-600">
-                                                    {currentDoc.data.target_price || '85,000'}원
-                                                </p>
+                                                <p className="text-2xl font-black text-red-600">{currentDoc.data.target_price || '85,000'}원</p>
                                             </div>
                                             <div className="border-l-4 border-gray-300 pl-4">
                                                 <p className="text-xs text-gray-500 font-semibold mb-1">현재주가</p>
-                                                <p className="text-2xl font-black text-gray-700">
-                                                    {currentDoc.data.current_price || '68,500'}원
-                                                </p>
+                                                <p className="text-2xl font-black text-gray-700">{currentDoc.data.current_price || '68,500'}원</p>
                                             </div>
                                             <div className="border-l-4 border-blue-600 pl-4">
                                                 <p className="text-xs text-gray-500 font-semibold mb-1">상승여력</p>
@@ -1093,19 +947,14 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                         </div>
                                     </div>
 
-                                    {/* 본문 */}
                                     <article className="px-12 py-8">
                                         <div className="prose max-w-none">
-                                            <div className="text-gray-800 leading-relaxed text-[15px]"
-                                                 style={{
-                                                     fontFamily: "'Crimson Pro', serif"
-                                                 }}>
+                                            <div className="text-gray-800 leading-relaxed text-[15px]" style={{ fontFamily: "'Crimson Pro', serif" }}>
                                                 <SecuritiesContentRenderer content={currentDoc.data.content} />
                                             </div>
                                         </div>
                                     </article>
 
-                                    {/* 애널리스트 정보 */}
                                     <div className="px-12 py-6 bg-gray-50 border-t-2 border-gray-200">
                                         <div className="flex justify-between items-center">
                                             <div>
@@ -1120,11 +969,10 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                         </div>
                                     </div>
 
-                                    {/* 면책조항 */}
                                     <footer className="px-12 py-6 bg-gray-100 border-t border-gray-300">
                                         <p className="text-[9px] text-gray-600 leading-relaxed">
-                                            본 자료는 고객의 증권투자를 돕기 위해 작성된 참고자료이며, 어떠한 경우에도 법적 책임소재에 대한 증빙자료로 사용될 수 없습니다. 
-                                            본 자료는 당사의 저작물로서 모든 저작권은 당사에게 있으며, 어떠한 경우에도 당사의 동의 없이 복제, 배포, 전송, 기타 저작권 침해행위를 할 수 없습니다. 
+                                            본 자료는 고객의 증권투자를 돕기 위해 작성된 참고자료이며, 어떠한 경우에도 법적 책임소재에 대한 증빙자료로 사용될 수 없습니다.
+                                            본 자료는 당사의 저작물로서 모든 저작권은 당사에게 있으며, 어떠한 경우에도 당사의 동의 없이 복제, 배포, 전송, 기타 저작권 침해행위를 할 수 없습니다.
                                             투자자는 금융투자상품에 대하여 당사로부터 충분한 설명을 받을 권리가 있으며, 투자 전 상품설명서 및 약관을 반드시 읽어보시기 바랍니다.
                                         </p>
                                         <div className="flex justify-between items-center mt-4 text-[10px] text-gray-500 font-bold">
@@ -1134,157 +982,139 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                     </footer>
                                 </section>
                             ) : (
-                                /* ═══════════════════════════════════════
-                                   일반 공문서 스타일 레이아웃
-                                   ═══════════════════════════════════════ */
+                                /* 일반 공문서 스타일 (인장 위치 개선) */
                                 <section className="document-canvas shadow-2xl">
-                                {/* 문서 헤더 - 공식 문서 스타일 */}
-                                <div className="border-b-2 border-gray-800 pb-8 mb-8 px-12 pt-12">
-                                    <div className="text-center mb-8">
-                                        <h2 className="text-5xl font-black tracking-tight display mb-2">
-                                            {currentDoc.data.organization}
-                                        </h2>
-                                        <div className="h-1 w-32 bg-blue-600 mx-auto mb-4"></div>
-                                        <code className="text-xs font-bold text-gray-600 mono tracking-wider uppercase">
-                                            {currentTemplate?.category} Document
-                                        </code>
-                                    </div>
-                                    
-                                    {/* 문서 번호 및 메타데이터 */}
-                                    <div className="border border-gray-300 rounded p-4 bg-gray-50 grid grid-cols-2 gap-3 text-xs mono">
-                                        <div className="flex justify-between border-b border-gray-200 pb-2">
-                                            <span className="font-bold text-gray-600">문서번호:</span>
-                                            <span className="text-gray-800">{currentTemplate?.id}-{currentDoc.id.substring(0, 6)}</span>
+                                    {/* 문서 헤더 */}
+                                    <div className="border-b-2 border-gray-800 pb-8 mb-8 px-12 pt-12">
+                                        <div className="text-center mb-8">
+                                            <h2 className="text-5xl font-black tracking-tight display mb-2">{currentDoc.data.organization}</h2>
+                                            <div className="h-1 w-32 bg-blue-600 mx-auto mb-4"></div>
+                                            <code className="text-xs font-bold text-gray-600 mono tracking-wider uppercase">
+                                                {currentTemplate?.category} Document
+                                            </code>
                                         </div>
-                                        <div className="flex justify-between border-b border-gray-200 pb-2">
-                                            <span className="font-bold text-gray-600">시행일자:</span>
-                                            <span className="text-gray-800">{new Date().toLocaleDateString('ko-KR')}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="font-bold text-gray-600">보존기간:</span>
-                                            <span className="text-gray-800">영구</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="font-bold text-gray-600">문서종류:</span>
-                                            <span className="text-gray-800">{currentTemplate?.name}</span>
+                                        <div className="border border-gray-300 rounded p-4 bg-gray-50 grid grid-cols-2 gap-3 text-xs mono">
+                                            <div className="flex justify-between border-b border-gray-200 pb-2">
+                                                <span className="font-bold text-gray-600">문서번호:</span>
+                                                <span className="text-gray-800">{currentTemplate?.id}-{currentDoc.id.substring(0, 6)}</span>
+                                            </div>
+                                            <div className="flex justify-between border-b border-gray-200 pb-2">
+                                                <span className="font-bold text-gray-600">시행일자:</span>
+                                                <span className="text-gray-800">{new Date().toLocaleDateString('ko-KR')}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="font-bold text-gray-600">보존기간:</span>
+                                                <span className="text-gray-800">영구</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="font-bold text-gray-600">문서종류:</span>
+                                                <span className="text-gray-800">{currentTemplate?.name}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* 수신/발신 정보 */}
-                                <div className="px-12 mb-10">
-                                    <table className="w-full border-2 border-gray-800 text-sm">
-                                        <tbody>
-                                            <tr className="border-b border-gray-800">
-                                                <td className="font-bold bg-gray-100 px-6 py-4 w-24 text-gray-700 border-r-2 border-gray-800">수신</td>
-                                                <td className="px-6 py-4 font-semibold text-lg">{currentDoc.data.recipient}</td>
-                                            </tr>
-                                            <tr className="border-b border-gray-800">
-                                                <td className="font-bold bg-gray-100 px-6 py-4 text-gray-700 border-r-2 border-gray-800">발신</td>
-                                                <td className="px-6 py-4">{currentDoc.data.organization}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="font-bold bg-gray-100 px-6 py-4 text-gray-700 border-r-2 border-gray-800">제목</td>
-                                                <td className="px-6 py-4 font-bold text-base">{currentDoc.data.title}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* 본문 */}
-                                <article className="px-12 mb-16">
-                                    <div className="border-2 border-gray-300 rounded-lg p-8 bg-white min-h-[400px]">
-                                        <div className="text-gray-800 leading-loose whitespace-pre-wrap text-base">
-                                            {currentDoc.data.content}
-                                        </div>
+                                    {/* 수신/발신 정보 */}
+                                    <div className="px-12 mb-10">
+                                        <table className="w-full border-2 border-gray-800 text-sm">
+                                            <tbody>
+                                                <tr className="border-b border-gray-800">
+                                                    <td className="font-bold bg-gray-100 px-6 py-4 w-24 text-gray-700 border-r-2 border-gray-800">수신</td>
+                                                    <td className="px-6 py-4 font-semibold text-lg">{currentDoc.data.recipient}</td>
+                                                </tr>
+                                                <tr className="border-b border-gray-800">
+                                                    <td className="font-bold bg-gray-100 px-6 py-4 text-gray-700 border-r-2 border-gray-800">발신</td>
+                                                    <td className="px-6 py-4">{currentDoc.data.organization}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="font-bold bg-gray-100 px-6 py-4 text-gray-700 border-r-2 border-gray-800">제목</td>
+                                                    <td className="px-6 py-4 font-bold text-base">{currentDoc.data.title}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                </article>
 
-                                {/* 결재란 */}
-                                <div className="px-12 mb-12">
-                                    <div className="border-2 border-gray-800">
-                                        <div className="grid grid-cols-4 text-center">
-                                            <div className="border-r-2 border-gray-800 py-3 bg-gray-100">
-                                                <p className="text-xs font-bold text-gray-600">담당</p>
-                                            </div>
-                                            <div className="border-r-2 border-gray-800 py-3 bg-gray-100">
-                                                <p className="text-xs font-bold text-gray-600">검토</p>
-                                            </div>
-                                            <div className="border-r-2 border-gray-800 py-3 bg-gray-100">
-                                                <p className="text-xs font-bold text-gray-600">승인</p>
-                                            </div>
-                                            <div className="py-3 bg-gray-100">
-                                                <p className="text-xs font-bold text-gray-600">발신</p>
+                                    {/* 본문 */}
+                                    <article className="px-12 mb-16">
+                                        <div className="border-2 border-gray-300 rounded-lg p-8 bg-white min-h-[400px]">
+                                            <div className="text-gray-800 leading-loose whitespace-pre-wrap text-base">
+                                                {currentDoc.data.content}
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-4 text-center border-t-2 border-gray-800">
-                                            <div className="border-r-2 border-gray-800 py-12">
-                                                {/* 담당자 서명란 */}
-                                            </div>
-                                            <div className="border-r-2 border-gray-800 py-12">
-                                                {/* 검토자 서명란 */}
-                                            </div>
-                                            <div className="border-r-2 border-gray-800 py-12">
-                                                {/* 승인자 서명란 */}
-                                            </div>
-                                            <div className="py-12 relative">
-                                                {/* 발신자 인장 위치 */}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                    </article>
 
-                                {/* 인장 - 결재란 내부로 이동 */}
-                                <canvas
-                                    ref={canvasRef}
-                                    width="200"
-                                    height="200"
-                                    className="absolute right-16 bottom-[180px] w-28 h-28 opacity-95"
-                                />
-
-                                {/* 발신자 정보 */}
-                                <div className="px-12 mb-16 text-right">
-                                    <div className="inline-block text-left">
-                                        <p className="text-sm text-gray-600 mb-2">발신자</p>
-                                        <div className="border-b-2 border-gray-800 pb-2 px-4">
-                                            <p className="text-2xl font-bold tracking-tight">
-                                                {currentDoc.data.author}
-                                            </p>
-                                        </div>
-                                        <p className="text-xs text-gray-500 mt-1 text-right">(인)</p>
-                                    </div>
-                                </div>
-
-                                {/* 푸터 */}
-                                <footer className="absolute bottom-6 left-0 right-0 px-12">
-                                    <div className="border-t-2 border-gray-300 pt-4">
-                                        <div className="grid grid-cols-3 gap-4 text-[10px] text-gray-500 mono">
-                                            <div>
-                                                <p className="font-bold mb-1">문서검증번호</p>
-                                                <p>{currentDoc.id.substring(0, 16).toUpperCase()}</p>
+                                    {/* 결재란 + 인장 (위치 개선) */}
+                                    <div className="px-12 mb-12">
+                                        <div className="border-2 border-gray-800">
+                                            <div className="grid grid-cols-4 text-center">
+                                                <div className="border-r-2 border-gray-800 py-3 bg-gray-100">
+                                                    <p className="text-xs font-bold text-gray-600">담당</p>
+                                                </div>
+                                                <div className="border-r-2 border-gray-800 py-3 bg-gray-100">
+                                                    <p className="text-xs font-bold text-gray-600">검토</p>
+                                                </div>
+                                                <div className="border-r-2 border-gray-800 py-3 bg-gray-100">
+                                                    <p className="text-xs font-bold text-gray-600">승인</p>
+                                                </div>
+                                                <div className="py-3 bg-gray-100">
+                                                    <p className="text-xs font-bold text-gray-600">발신</p>
+                                                </div>
                                             </div>
-                                            <div className="text-center">
-                                                <p className="font-bold mb-1">발행시스템</p>
-                                                <p>ProDoc Enterprise v2.0</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-bold mb-1">발행일시</p>
-                                                <p>{new Date().toLocaleString('ko-KR')}</p>
+                                            <div className="grid grid-cols-4 text-center border-t-2 border-gray-800">
+                                                <div className="border-r-2 border-gray-800 py-12"></div>
+                                                <div className="border-r-2 border-gray-800 py-12"></div>
+                                                <div className="border-r-2 border-gray-800 py-12"></div>
+                                                {/* 인장 위치 개선: 결재란 내부 중앙 정렬 */}
+                                                <div className="py-12 flex items-center justify-center relative">
+                                                    <canvas
+                                                        ref={canvasRef}
+                                                        width="200"
+                                                        height="200"
+                                                        className="w-28 h-28 opacity-95"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-center text-[9px] text-gray-400 mt-3 mono">
-                                        <p>이 문서는 전자문서 및 전자거래 기본법에 따라 법적 효력을 가집니다.</p>
+
+                                    {/* 발신자 정보 */}
+                                    <div className="px-12 mb-16 text-right">
+                                        <div className="inline-block text-left">
+                                            <p className="text-sm text-gray-600 mb-2">발신자</p>
+                                            <div className="border-b-2 border-gray-800 pb-2 px-4">
+                                                <p className="text-2xl font-bold tracking-tight">{currentDoc.data.author}</p>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1 text-right">(인)</p>
+                                        </div>
                                     </div>
-                                </footer>
+
+                                    {/* 푸터 */}
+                                    <footer className="absolute bottom-6 left-0 right-0 px-12">
+                                        <div className="border-t-2 border-gray-300 pt-4">
+                                            <div className="grid grid-cols-3 gap-4 text-[10px] text-gray-500 mono">
+                                                <div>
+                                                    <p className="font-bold mb-1">문서검증번호</p>
+                                                    <p>{currentDoc.id.substring(0, 16).toUpperCase()}</p>
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="font-bold mb-1">발행시스템</p>
+                                                    <p>ProDoc Enterprise v2.1</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-bold mb-1">발행일시</p>
+                                                    <p>{new Date().toLocaleString('ko-KR')}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-center text-[9px] text-gray-400 mt-3 mono">
+                                            <p>이 문서는 전자문서 및 전자거래 기본법에 따라 법적 효력을 가집니다.</p>
+                                        </div>
+                                    </footer>
                                 </section>
                             )}
                         </div>
-
                         <StatusBar status="saved" lastSaved={state.lastSaved} />
                     </main>
 
-                    {/* 토스트 알림 */}
                     {toast && <Toast message={toast} onClose={() => setToast(null)} />}
                 </div>
             );
