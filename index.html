@@ -3,46 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProDoc Engine • Enterprise Document Automation</title>
+    <title>ProDoc Engine • Enterprise Document Automation v3.0</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Archivo+Black&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Archivo+Black&family=Crimson+Pro:wght@400;600;700&family=Noto+Serif+KR:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
+        :root {
+            --accent: #22d3ee;
+            --accent-2: #06b6d4;
+            --accent-glow: rgba(34, 211, 238, 0.35);
+            --accent-soft: rgba(34, 211, 238, 0.1);
+            --accent-border: rgba(34, 211, 238, 0.3);
+        }
+        [data-theme="amber"] {
+            --accent: #fbbf24;
+            --accent-2: #f59e0b;
+            --accent-glow: rgba(251, 191, 36, 0.35);
+            --accent-soft: rgba(251, 191, 36, 0.1);
+            --accent-border: rgba(251, 191, 36, 0.3);
+        }
+        [data-theme="violet"] {
+            --accent: #a78bfa;
+            --accent-2: #8b5cf6;
+            --accent-glow: rgba(167, 139, 250, 0.35);
+            --accent-soft: rgba(167, 139, 250, 0.1);
+            --accent-border: rgba(167, 139, 250, 0.3);
+        }
+        [data-theme="emerald"] {
+            --accent: #34d399;
+            --accent-2: #10b981;
+            --accent-glow: rgba(52, 211, 153, 0.35);
+            --accent-soft: rgba(52, 211, 153, 0.1);
+            --accent-border: rgba(52, 211, 153, 0.3);
+        }
+        [data-theme="rose"] {
+            --accent: #fb7185;
+            --accent-2: #f43f5e;
+            --accent-glow: rgba(251, 113, 133, 0.35);
+            --accent-soft: rgba(251, 113, 133, 0.1);
+            --accent-border: rgba(251, 113, 133, 0.3);
+        }
+
         @page { size: A4; margin: 0; }
         @media print {
             .no-print { display: none !important; }
-            .print-area { padding: 0 !important; margin: 0 !important; }
+            .print-area { padding: 0 !important; margin: 0 !important; background: white !important; }
             body { background: white !important; }
+            .doc-zoom-wrap { transform: none !important; }
         }
-       
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-       
+
         body {
             background: #0a0e14;
             color: #d4d4d4;
             font-family: 'JetBrains Mono', monospace;
             overflow: hidden;
         }
-        .neo-glow {
-            box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
-        }
+
         .gradient-border {
             position: relative;
             background: linear-gradient(135deg, #0a0e14 0%, #151b24 100%);
         }
-       
         .gradient-border::before {
             content: '';
             position: absolute;
             inset: 0;
             border-radius: inherit;
             padding: 2px;
-            background: linear-gradient(135deg, #22d3ee, #8b5cf6);
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             mask-composite: exclude;
             pointer-events: none;
@@ -53,49 +87,213 @@
             background: #ffffff;
             color: #1a1a1a;
             position: relative;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            font-family: 'Crimson Pro', serif;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.05);
+            font-family: 'Crimson Pro', 'Noto Serif KR', serif;
             border: 1px solid #e5e7eb;
+            overflow: hidden;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
         .display { font-family: 'Archivo Black', sans-serif; }
+        .serif-kr { font-family: 'Noto Serif KR', serif; }
+
         .toast {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: rgba(34, 211, 238, 0.95);
+            background: var(--accent);
             color: #0a0e14;
-            padding: 16px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            animation: slideIn 0.3s ease-out;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 9999;
+            box-shadow: 0 10px 40px var(--accent-glow);
         }
         @keyframes slideIn {
             from { transform: translateX(400px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
         @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(34, 211, 238, 0.6); }
+            0%, 100% { box-shadow: 0 0 15px var(--accent-glow); }
+            50% { box-shadow: 0 0 30px var(--accent-glow); }
         }
-        .status-indicator {
-            animation: pulse-glow 2s infinite;
+        .status-indicator { animation: pulse-glow 2.4s infinite; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        /* 스크롤바 커스텀 */
+        .fade-up { animation: fadeUp 0.25s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .fade-in { animation: fadeIn 0.2s ease-out; }
+
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #0a0e14; }
-        ::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
-        /* 선택 텍스트 */
-        ::selection { background: #22d3ee; color: #0a0e14; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; opacity: 0.7; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-2); }
+        ::selection { background: var(--accent); color: #0a0e14; }
+
         .grid-bg {
             background-image:
-                linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
+                linear-gradient(var(--accent-soft) 1px, transparent 1px),
+                linear-gradient(90deg, var(--accent-soft) 1px, transparent 1px);
+            background-size: 24px 24px;
         }
+
+        /* Markdown body */
+        .md-body h1 { font-size: 1.75rem; font-weight: 900; margin: 1.2rem 0 0.6rem; color: #111827; letter-spacing: -0.02em; }
+        .md-body h2 { font-size: 1.4rem; font-weight: 800; margin: 1.1rem 0 0.5rem; color: #111827; padding-bottom: 0.3rem; border-bottom: 2px solid #e5e7eb; }
+        .md-body h3 { font-size: 1.15rem; font-weight: 700; margin: 0.9rem 0 0.4rem; color: #1f2937; }
+        .md-body h4 { font-size: 1rem; font-weight: 700; margin: 0.7rem 0 0.3rem; color: #374151; }
+        .md-body p { margin: 0.4rem 0; line-height: 1.75; color: #1f2937; }
+        .md-body ul { list-style: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
+        .md-body ol { list-style: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
+        .md-body li { margin: 0.25rem 0; line-height: 1.7; color: #1f2937; }
+        .md-body code.inline { background: #f3f4f6; color: #db2777; padding: 0.1rem 0.4rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+        .md-body pre { background: #0f172a; color: #34d399; padding: 1rem 1.2rem; border-radius: 8px; margin: 0.8rem 0; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.6; border-left: 3px solid #34d399; }
+        .md-body blockquote { border-left: 4px solid #3b82f6; background: #eff6ff; padding: 0.6rem 1rem; margin: 0.6rem 0; color: #1e3a8a; font-style: italic; border-radius: 0 6px 6px 0; }
+        .md-body strong { font-weight: 700; color: #111827; }
+        .md-body em { font-style: italic; }
+        .md-body hr { border: none; border-top: 1px solid #d1d5db; margin: 1.2rem 0; }
+        .md-body a { color: #2563eb; text-decoration: underline; }
+        .md-body table { border-collapse: collapse; width: 100%; margin: 0.8rem 0; }
+        .md-body table th { background: #1f2937; color: white; padding: 0.6rem 0.8rem; text-align: left; font-size: 0.85rem; }
+        .md-body table td { border: 1px solid #e5e7eb; padding: 0.5rem 0.8rem; font-size: 0.9rem; }
+        .md-body table tr:nth-child(even) td { background: #f9fafb; }
+
+        .securities-md h1, .securities-md h2 { color: #991b1b; border-bottom-color: #fecaca; }
+        .securities-md table th { background: #dc2626; }
+
+        /* Watermark */
+        .watermark-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 50;
+            overflow: hidden;
+        }
+        .watermark-text {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 9rem;
+            color: rgba(220, 38, 38, 0.08);
+            transform: rotate(-30deg);
+            letter-spacing: 0.5rem;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        /* Command palette */
+        .cmd-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 12vh;
+        }
+        .cmd-panel {
+            width: 640px;
+            max-width: 92vw;
+            background: #0d1117;
+            border: 1px solid var(--accent-border);
+            border-radius: 14px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 60px var(--accent-glow);
+            overflow: hidden;
+            animation: fadeUp 0.18s ease-out;
+        }
+        .cmd-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 18px 22px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            color: #e5e7eb;
+            border-bottom: 1px solid var(--accent-border);
+        }
+        .cmd-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #d4d4d4;
+            border-left: 3px solid transparent;
+        }
+        .cmd-item.active { background: var(--accent-soft); border-left-color: var(--accent); color: var(--accent); }
+        .cmd-item:hover { background: var(--accent-soft); }
+        .cmd-section {
+            padding: 6px 16px;
+            font-size: 10px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+        }
+
+        .kbd {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            color: #d1d5db;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .doc-zoom-wrap {
+            transform-origin: top center;
+            transition: transform 0.2s ease-out;
+        }
+
+        .star-btn { transition: transform 0.15s; cursor: pointer; }
+        .star-btn:hover { transform: scale(1.2); }
+
+        .tab-btn {
+            padding: 6px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #9ca3af;
+            background: transparent;
+            border: none;
+        }
+        .tab-btn.active { background: var(--accent-soft); color: var(--accent); }
+        .tab-btn:hover { color: var(--accent); }
+
+        .tool-btn {
+            background: #151b24;
+            color: #d4d4d4;
+            border: 1px solid #2a3441;
+            border-radius: 8px;
+            padding: 7px 11px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .tool-btn.primary { background: var(--accent); color: #0a0e14; border-color: var(--accent); }
+        .tool-btn.primary:hover { background: var(--accent-2); border-color: var(--accent-2); color: #0a0e14; }
     </style>
 </head>
 <body>
@@ -103,207 +301,267 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo, useCallback, useReducer } = React;
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎯 CONSTANTS & CONFIGURATION
-        // ═══════════════════════════════════════════════════════════════
         const TEMPLATES = {
             LECTURE_CURRICULUM: {
-                id: 'LECTURE_CURRICULUM',
-                name: '강의 커리큘럼',
-                icon: '📚',
-                category: 'education',
-                fields: ['organization', 'recipient', 'title', 'content', 'author', 'course_code', 'duration'],
+                id: 'LECTURE_CURRICULUM', name: '강의 커리큘럼', icon: '📚', category: 'education',
+                fields: ['organization', 'recipient', 'title', 'content', 'author'],
                 defaultContent: `## 고급 시스템 아키텍처 설계\n\n### 1주차: 분산 시스템 기초\n- CAP 정리와 실무 적용\n- 마이크로서비스 패턴\n- 이벤트 드리븐 아키텍처\n\n### 2주차: 성능 최적화\n- 캐싱 전략 (Redis, CDN)\n- 데이터베이스 샤딩\n- 로드 밸런싱 설계\n\n### 3주차: 보안 아키텍처\n- OAuth 2.0 / OIDC\n- API 게이트웨이 보안\n- 제로 트러스트 모델\n\n### 4주차: 클라우드 네이티브\n- Kubernetes 오케스트레이션\n- 서버리스 아키텍처\n- GitOps 파이프라인`
             },
             CODE_REVIEW: {
-                id: 'CODE_REVIEW',
-                name: '코드 리뷰 보고서',
-                icon: '🔍',
-                category: 'engineering',
-                fields: ['organization', 'recipient', 'title', 'content', 'author', 'severity', 'reviewed_by'],
-                defaultContent: `## 코드 품질 감사 결과\n\n### 🔴 Critical Issues\n- **메모리 누수**: UserService.ts L.245 - 이벤트 리스너 정리 누락\n- **SQL 인젝션 취약점**: api/search.ts - 파라미터 검증 부재\n\n### 🟡 Performance Concerns\n- N+1 쿼리 발생: Product 목록 조회 시 개별 쿼리 실행\n- 불필요한 재렌더링: React.memo() 미적용\n\n### ✅ Best Practices\n- TypeScript strict 모드 활성화\n- 단위 테스트 커버리지 85%\n- ESLint 규칙 준수\n\n### 📋 Action Items\n1. 보안 취약점 즉시 패치 (P0)\n2. 성능 최적화 스프린트 계획 (P1)\n3. 코드 스타일 가이드 문서화 (P2)`
+                id: 'CODE_REVIEW', name: '코드 리뷰 보고서', icon: '🔍', category: 'engineering',
+                fields: ['organization', 'recipient', 'title', 'content', 'author'],
+                defaultContent: `## 코드 품질 감사 결과\n\n### 🔴 Critical Issues\n- **메모리 누수**: \`UserService.ts\` L.245 - 이벤트 리스너 정리 누락\n- **SQL 인젝션 취약점**: \`api/search.ts\` - 파라미터 검증 부재\n\n### 🟡 Performance Concerns\n- N+1 쿼리 발생: Product 목록 조회 시 개별 쿼리 실행\n- 불필요한 재렌더링: \`React.memo()\` 미적용\n\n### ✅ Best Practices\n- TypeScript strict 모드 활성화\n- 단위 테스트 커버리지 85%\n- ESLint 규칙 준수\n\n### 📋 Action Items\n1. 보안 취약점 즉시 패치 (P0)\n2. 성능 최적화 스프린트 계획 (P1)\n3. 코드 스타일 가이드 문서화 (P2)\n\n\`\`\`typescript\n// 권장 패턴\nasync function getUsers() {\n  return db.query('SELECT * FROM users WHERE active = $1', [true]);\n}\n\`\`\``
             },
             CERTIFICATE: {
-                id: 'CERTIFICATE',
-                name: '수료증',
-                icon: '🏆',
-                category: 'education',
-                fields: ['organization', 'recipient', 'title', 'content', 'author', 'issue_date', 'cert_number'],
-                defaultContent: `본 증서는 아래 명시된 수료자가 규정된 교육 과정을 성공적으로 이수하였음을 증명합니다.\n\n이수자는 해당 분야의 이론적 지식과 실무 역량을 충분히 갖추었으며, 전문가로서의 자질을 인정받았습니다.\n\n교육 내용:\n- 시스템 아키텍처 설계 원리\n- 대규모 트래픽 처리 기술\n- 보안 및 성능 최적화\n- 실전 프로젝트 설계 및 구현`
+                id: 'CERTIFICATE', name: '수료증', icon: '🏆', category: 'education',
+                fields: ['organization', 'recipient', 'title', 'content', 'author'],
+                defaultContent: `본 증서는 아래 명시된 수료자가 규정된 교육 과정을 성공적으로 이수하였음을 증명합니다.\n\n이수자는 해당 분야의 이론적 지식과 실무 역량을 충분히 갖추었으며, 전문가로서의 자질을 인정받았습니다.\n\n## 교육 내용\n- 시스템 아키텍처 설계 원리\n- 대규모 트래픽 처리 기술\n- 보안 및 성능 최적화\n- 실전 프로젝트 설계 및 구현`
             },
             TECHNICAL_SPEC: {
-                id: 'TECHNICAL_SPEC',
-                name: '기술 명세서',
-                icon: '⚙️',
-                category: 'engineering',
-                fields: ['organization', 'recipient', 'title', 'content', 'author', 'version', 'api_version'],
-                defaultContent: `## API 명세서 v2.0\n\n### 인증 엔드포인트\n**POST** /api/v2/auth/login\n\`\`\`json\n{\n "email": "user@example.com",\n "password": "***",\n "mfa_token": "123456"\n}\n\`\`\`\n\nResponse: 200 OK\n\`\`\`json\n{\n "access_token": "eyJ...",\n "refresh_token": "eyJ...",\n "expires_in": 3600\n}\n\`\`\`\n\n### 사용자 리소스\n**GET** /api/v2/users/{id}\n\nHeaders:\n- Authorization: Bearer {token}\n- X-API-Version: 2.0\n\n**Rate Limit**: 1000 req/hour`
+                id: 'TECHNICAL_SPEC', name: '기술 명세서', icon: '⚙️', category: 'engineering',
+                fields: ['organization', 'recipient', 'title', 'content', 'author'],
+                defaultContent: `## API 명세서 v2.0\n\n### 인증 엔드포인트\n**POST** \`/api/v2/auth/login\`\n\n\`\`\`json\n{\n  "email": "user@example.com",\n  "password": "***",\n  "mfa_token": "123456"\n}\n\`\`\`\n\n**Response: 200 OK**\n\n\`\`\`json\n{\n  "access_token": "eyJ...",\n  "refresh_token": "eyJ...",\n  "expires_in": 3600\n}\n\`\`\`\n\n### 사용자 리소스\n**GET** \`/api/v2/users/{id}\`\n\nHeaders:\n- \`Authorization: Bearer {token}\`\n- \`X-API-Version: 2.0\`\n\n> **Rate Limit**: 1,000 req/hour per token`
             },
             PROJECT_PROPOSAL: {
-                id: 'PROJECT_PROPOSAL',
-                name: '프로젝트 제안서',
-                icon: '💼',
-                category: 'business',
-                fields: ['organization', 'recipient', 'title', 'content', 'author', 'budget', 'timeline'],
-                defaultContent: `## 프로젝트 개요\n\n본 제안서는 차세대 클라우드 기반 협업 플랫폼 구축을 위한 기술적, 사업적 계획을 담고 있습니다.\n\n### 목표\n- 실시간 협업 도구 통합\n- 월 1,000만 MAU 처리 가능 인프라\n- 99.99% 가용성 보장\n\n### 기술 스택\n- Frontend: React 18 + TypeScript\n- Backend: Node.js + NestJS\n- Database: PostgreSQL + Redis\n- Infrastructure: AWS EKS + CloudFront\n\n### 예상 일정\n- Phase 1 (3개월): MVP 개발\n- Phase 2 (3개월): 베타 런칭\n- Phase 3 (2개월): 정식 출시`
+                id: 'PROJECT_PROPOSAL', name: '프로젝트 제안서', icon: '💼', category: 'business',
+                fields: ['organization', 'recipient', 'title', 'content', 'author'],
+                defaultContent: `## 프로젝트 개요\n\n본 제안서는 **차세대 클라우드 기반 협업 플랫폼** 구축을 위한 기술적, 사업적 계획을 담고 있습니다.\n\n### 목표\n- 실시간 협업 도구 통합\n- 월 1,000만 MAU 처리 가능 인프라\n- 99.99% 가용성 보장\n\n### 기술 스택\n- Frontend: React 18 + TypeScript\n- Backend: Node.js + NestJS\n- Database: PostgreSQL + Redis\n- Infrastructure: AWS EKS + CloudFront\n\n### 예상 일정\n1. Phase 1 (3개월): MVP 개발\n2. Phase 2 (3개월): 베타 런칭\n3. Phase 3 (2개월): 정식 출시`
             },
             MEETING_MINUTES: {
-                id: 'MEETING_MINUTES',
-                name: '회의록',
-                icon: '📝',
-                category: 'business',
-                fields: ['organization', 'recipient', 'title', 'content', 'author', 'attendees', 'meeting_date'],
+                id: 'MEETING_MINUTES', name: '회의록', icon: '📝', category: 'business',
+                fields: ['organization', 'recipient', 'title', 'content', 'author'],
                 defaultContent: `## 아키텍처 리뷰 회의\n\n**일시**: 2025-02-11 14:00-16:00\n**참석**: 김철수 (CTO), 이영희 (Tech Lead), 박민수 (Senior Engineer)\n\n### 논의 사항\n\n#### 1. 데이터베이스 마이그레이션 전략\n- MySQL → PostgreSQL 이전 계획\n- 무중단 마이그레이션 방안 논의\n- **결정**: Blue-Green 배포 전략 채택\n\n#### 2. API 버전 관리\n- v1 지원 종료 일정: 2025년 6월\n- 클라이언트 마이그레이션 가이드 작성 필요\n\n### Action Items\n- [ ] 마이그레이션 스크립트 작성 (박민수, 2/20)\n- [ ] API 문서 업데이트 (이영희, 2/15)\n- [ ] 고객사 공지 발송 (김철수, 2/13)`
             },
             INCIDENT_REPORT: {
-                id: 'INCIDENT_REPORT',
-                name: '장애 보고서',
-                icon: '🚨',
-                category: 'engineering',
-                fields: ['organization', 'recipient', 'title', 'content', 'author', 'severity', 'incident_id'],
-                defaultContent: `## 서비스 장애 사후 분석 (Post-Mortem)\n\n### 사건 개요\n- **발생 시각**: 2025-02-11 03:42:15 UTC\n- **복구 시각**: 2025-02-11 05:18:33 UTC\n- **영향 범위**: API 서버 전체 다운 (95분간)\n- **영향 받은 사용자**: 약 15,000명\n\n### 근본 원인 (Root Cause)\nRedis 클러스터의 메모리 부족으로 인한 캐시 서버 OOM 발생.\nFailover 메커니즘이 작동했으나, 백업 노드 또한 동일한 설정 오류로 즉시 장애 발생.\n\n### 타임라인\n- 03:42 - CloudWatch 알람 발생\n- 03:45 - On-call 엔지니어 대응 시작\n- 04:20 - 근본 원인 식별 완료\n- 04:50 - 임시 패치 배포\n- 05:18 - 서비스 완전 복구\n\n### 재발 방지 대책\n1. Redis 메모리 한계 모니터링 강화\n2. Auto-scaling 정책 재검토\n3. Chaos Engineering 테스트 정기 실시`
+                id: 'INCIDENT_REPORT', name: '장애 보고서', icon: '🚨', category: 'engineering',
+                fields: ['organization', 'recipient', 'title', 'content', 'author'],
+                defaultContent: `## 서비스 장애 사후 분석 (Post-Mortem)\n\n### 사건 개요\n- **발생 시각**: 2025-02-11 03:42:15 UTC\n- **복구 시각**: 2025-02-11 05:18:33 UTC\n- **영향 범위**: API 서버 전체 다운 (95분간)\n- **영향 받은 사용자**: 약 15,000명\n\n### 근본 원인 (Root Cause)\nRedis 클러스터의 메모리 부족으로 인한 캐시 서버 OOM 발생.\nFailover 메커니즘이 작동했으나, 백업 노드 또한 동일한 설정 오류로 즉시 장애 발생.\n\n### 타임라인\n- 03:42 — CloudWatch 알람 발생\n- 03:45 — On-call 엔지니어 대응 시작\n- 04:20 — 근본 원인 식별 완료\n- 04:50 — 임시 패치 배포\n- 05:18 — 서비스 완전 복구\n\n### 재발 방지 대책\n1. Redis 메모리 한계 모니터링 강화\n2. Auto-scaling 정책 재검토\n3. Chaos Engineering 테스트 정기 실시`
             },
             PERFORMANCE_REVIEW: {
-                id: 'PERFORMANCE_REVIEW',
-                name: '성과 평가서',
-                icon: '⭐',
-                category: 'business',
-                fields: ['organization', 'recipient', 'title', 'content', 'author', 'review_period', 'rating'],
-                defaultContent: `## Q4 2024 성과 평가\n\n### 주요 성과\n\n#### 기술적 기여\n- 마이크로서비스 전환 프로젝트 리드\n- API 응답 시간 40% 개선 (평균 180ms → 108ms)\n- 신규 CI/CD 파이프라인 구축\n\n#### 리더십 & 협업\n- 주니어 개발자 3명 멘토링\n- 사내 테크톡 2회 발표\n- 크로스팀 협업 프로젝트 주도\n\n### 개선이 필요한 영역\n- 문서화 품질 향상\n- 업무 우선순위 관리\n\n### 다음 분기 목표\n- 시스템 아키텍처 리팩토링 완료\n- AWS 인증 (Solutions Architect) 취득\n- 테스트 커버리지 90% 달성\n\n**종합 평가**: Exceeds Expectations`
+                id: 'PERFORMANCE_REVIEW', name: '성과 평가서', icon: '⭐', category: 'business',
+                fields: ['organization', 'recipient', 'title', 'content', 'author'],
+                defaultContent: `## Q4 2024 성과 평가\n\n### 주요 성과\n\n#### 기술적 기여\n- 마이크로서비스 전환 프로젝트 리드\n- API 응답 시간 **40% 개선** (평균 180ms → 108ms)\n- 신규 CI/CD 파이프라인 구축\n\n#### 리더십 & 협업\n- 주니어 개발자 3명 멘토링\n- 사내 테크톡 2회 발표\n- 크로스팀 협업 프로젝트 주도\n\n### 개선이 필요한 영역\n- 문서화 품질 향상\n- 업무 우선순위 관리\n\n### 다음 분기 목표\n- 시스템 아키텍처 리팩토링 완료\n- AWS 인증 (Solutions Architect) 취득\n- 테스트 커버리지 90% 달성\n\n> **종합 평가**: Exceeds Expectations`
+            },
+            INVOICE: {
+                id: 'INVOICE', name: '청구서', icon: '🧾', category: 'business',
+                fields: ['organization', 'recipient', 'title', 'content', 'author'],
+                defaultContent: `## 청구 내역\n\n| 항목 | 수량 | 단가 | 금액 |\n|---|---|---|---|\n| 시스템 컨설팅 (8h) | 1 | 1,200,000 | 1,200,000 |\n| 아키텍처 설계 | 1 | 3,500,000 | 3,500,000 |\n| 코드 리뷰 패키지 | 2 | 800,000 | 1,600,000 |\n| 기술 자문 (월) | 3 | 500,000 | 1,500,000 |\n\n### 합계\n- 공급가액: **7,800,000원**\n- 부가세 (10%): 780,000원\n- **청구 총액: 8,580,000원**\n\n### 입금 안내\n- 은행: 우리은행\n- 계좌: 1002-XXX-XXXXXX\n- 예금주: (주)프로닥엔진\n- 납부기한: 발행일로부터 30일 이내`
+            },
+            COVER_LETTER: {
+                id: 'COVER_LETTER', name: '자기소개서', icon: '📃', category: 'personal',
+                fields: ['organization', 'recipient', 'title', 'content', 'author'],
+                defaultContent: `## 지원 동기\n\n10년간 분산 시스템과 클라우드 인프라 분야에서 쌓아온 경험을 바탕으로, 귀사의 차세대 플랫폼 구축에 기여하고자 지원합니다.\n\n## 핵심 역량\n\n### 기술 역량\n- 대규모 트래픽 처리 시스템 설계 (DAU 500만+)\n- Kubernetes 기반 마이크로서비스 운영\n- 실시간 데이터 파이프라인 구축 (Kafka, Flink)\n\n### 리더십\n- 15명 규모 엔지니어링 팀 리딩 경험\n- 신규 기술 도입 및 조직 전환 주도\n- 멘토링 프로그램 설계 및 운영\n\n## 입사 후 포부\n\n첫 3개월 내 기존 인프라를 분석하고, 6개월 안에 핵심 병목 지점을 개선하여 비용 효율과 안정성을 동시에 달성하겠습니다.\n\n> 끊임없이 배우고, 만든 것에 대한 책임을 지는 엔지니어가 되겠습니다.`
             },
             INVESTMENT_REPORT: {
-                id: 'INVESTMENT_REPORT',
-                name: '투자 리서치 보고서',
-                icon: '📊',
-                category: 'securities',
+                id: 'INVESTMENT_REPORT', name: '투자 리서치 보고서', icon: '📊', category: 'securities',
                 fields: ['organization', 'company', 'title', 'content', 'author', 'rating', 'target_price', 'current_price'],
                 isSecurities: true,
-                defaultContent: `## 투자의견 및 목표주가
-투자의견: BUY (신규)
-목표주가: 85,000원
-현재주가: 68,500원 (2025.02.11 기준)
-상승여력: 24.1%
-## Investment Thesis
-동사는 AI 반도체 시장의 급성장에 따라 2025년 실적 모멘텀이 강화될 전망입니다. 주요 고객사의 차세대 데이터센터 투자 확대와 HBM(고대역폭 메모리) 수요 증가가 긍정적입니다.
-### 핵심 투자 포인트
-1. **AI 반도체 슈퍼사이클 수혜**
-   - 글로벌 AI 서버 출하량 YoY +45% 예상
-   - HBM3E 매출 비중 2024년 15% → 2025년 32%
-2. **실적 개선 가시화**
-   - 2025년 영업이익률 23.5% 전망 (2024년 18.2%)
-   - 1분기 영업이익 YoY +127% 예상
-3. **밸류에이션 매력**
-   - 현재 P/E 14.2배 (과거 5년 평균 18.5배)
-   - P/B 1.8배로 동종업계 대비 30% 할인
-## 재무전망 (단위: 억원)
-구분 | 2023 | 2024E | 2025F | 2026F
-매출액 | 45,230 | 52,180 | 64,850 | 76,200
-영업이익 | 7,850 | 9,497 | 15,240 | 19,050
-순이익 | 6,120 | 7,344 | 11,780 | 14,730
-EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
-## 리스크 요인
-- 주요 고객사 수주 지연 가능성
-- 환율 변동성 (달러당 ±100원 시 영업이익 8% 변동)
-- 중국 경기 둔화에 따른 수요 감소`
+                defaultContent: `## 투자의견 및 목표주가\n투자의견: BUY (신규)\n목표주가: 85,000원\n현재주가: 68,500원 (2025.02.11 기준)\n상승여력: 24.1%\n## Investment Thesis\n동사는 AI 반도체 시장의 급성장에 따라 2025년 실적 모멘텀이 강화될 전망입니다. 주요 고객사의 차세대 데이터센터 투자 확대와 HBM(고대역폭 메모리) 수요 증가가 긍정적입니다.\n### 핵심 투자 포인트\n1. **AI 반도체 슈퍼사이클 수혜**\n   - 글로벌 AI 서버 출하량 YoY +45% 예상\n   - HBM3E 매출 비중 2024년 15% → 2025년 32%\n2. **실적 개선 가시화**\n   - 2025년 영업이익률 23.5% 전망 (2024년 18.2%)\n   - 1분기 영업이익 YoY +127% 예상\n3. **밸류에이션 매력**\n   - 현재 P/E 14.2배 (과거 5년 평균 18.5배)\n   - P/B 1.8배로 동종업계 대비 30% 할인\n## 재무전망 (단위: 억원)\n구분 | 2023 | 2024E | 2025F | 2026F\n매출액 | 45,230 | 52,180 | 64,850 | 76,200\n영업이익 | 7,850 | 9,497 | 15,240 | 19,050\n순이익 | 6,120 | 7,344 | 11,780 | 14,730\nEPS (원) | 3,825 | 4,590 | 7,363 | 9,206\n## 리스크 요인\n- 주요 고객사 수주 지연 가능성\n- 환율 변동성 (달러당 ±100원 시 영업이익 8% 변동)\n- 중국 경기 둔화에 따른 수요 감소`
             }
         };
 
-        const STORAGE_KEY = 'prodoc_documents';
-        const AUTOSAVE_INTERVAL = 3000;
+        const STORAGE_KEY = 'prodoc_documents_v3';
+        const SETTINGS_KEY = 'prodoc_settings_v3';
+        const AUTOSAVE_INTERVAL = 1500;
+        const THEMES = ['cyber', 'amber', 'violet', 'emerald', 'rose'];
+        const WATERMARKS = ['NONE', 'DRAFT', 'CONFIDENTIAL', 'APPROVED', 'INTERNAL ONLY', 'COPY'];
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🔧 CUSTOM HOOKS
-        // ═══════════════════════════════════════════════════════════════
         const useLocalStorage = (key, initialValue) => {
-            const [storedValue, setStoredValue] = useState(() => {
+            const [stored, setStored] = useState(() => {
                 try {
                     const item = window.localStorage.getItem(key);
                     return item ? JSON.parse(item) : initialValue;
-                } catch (error) {
-                    console.error('LocalStorage 읽기 오류:', error);
-                    return initialValue;
-                }
+                } catch (e) { return initialValue; }
             });
             const setValue = useCallback((value) => {
                 try {
-                    const valueToStore = value instanceof Function ? value(storedValue) : value;
-                    setStoredValue(valueToStore);
-                    window.localStorage.setItem(key, JSON.stringify(valueToStore));
-                } catch (error) {
-                    console.error('LocalStorage 쓰기 오류:', error);
-                }
-            }, [key, storedValue]);
-            return [storedValue, setValue];
-        };
-
-        const useKeyboardShortcut = (callback, keys) => {
-            useEffect(() => {
-                const handleKeyPress = (e) => {
-                    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-                    const modifierKey = isMac ? e.metaKey : e.ctrlKey;
-                    if (modifierKey && keys.includes(e.key.toLowerCase())) {
-                        e.preventDefault();
-                        callback();
-                    }
-                };
-                window.addEventListener('keydown', handleKeyPress);
-                return () => window.removeEventListener('keydown', handleKeyPress);
-            }, [callback, keys]);
+                    const v = value instanceof Function ? value(stored) : value;
+                    setStored(v);
+                    window.localStorage.setItem(key, JSON.stringify(v));
+                } catch (e) { console.error(e); }
+            }, [key, stored]);
+            return [stored, setValue];
         };
 
         const useAutoSave = (data, callback, delay = AUTOSAVE_INTERVAL) => {
             useEffect(() => {
-                const timer = setTimeout(() => {
-                    callback(data);
-                }, delay);
-                return () => clearTimeout(timer);
+                const t = setTimeout(() => callback(data), delay);
+                return () => clearTimeout(t);
             }, [data, callback, delay]);
         };
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🔧 UTILITY FUNCTIONS (개선됨)
-        // ═══════════════════════════════════════════════════════════════
-        /**
-         * 마크다운 테이블 파서 - 투자 리포트 테이블(파이프 없이도 인식) 완벽 지원
-         */
-        const parseMarkdownTable = (text) => {
+        // Inline markdown
+        const parseInline = (str) => {
+            const out = [];
+            let key = 0;
+            let s = str;
+            const patterns = [
+                { re: /\*\*(.+?)\*\*/, render: (m) => <strong key={key++}>{m[1]}</strong> },
+                { re: /__(.+?)__/, render: (m) => <strong key={key++}>{m[1]}</strong> },
+                { re: /\*(.+?)\*/, render: (m) => <em key={key++}>{m[1]}</em> },
+                { re: /`([^`]+)`/, render: (m) => <code key={key++} className="inline">{m[1]}</code> },
+                { re: /\[([^\]]+)\]\(([^)]+)\)/, render: (m) => <a key={key++} href={m[2]} target="_blank" rel="noreferrer">{m[1]}</a> },
+                { re: /~~(.+?)~~/, render: (m) => <del key={key++}>{m[1]}</del> },
+            ];
+            while (s.length > 0) {
+                let earliest = null;
+                for (const p of patterns) {
+                    const m = s.match(p.re);
+                    if (m && (!earliest || m.index < earliest.match.index)) {
+                        earliest = { match: m, pattern: p };
+                    }
+                }
+                if (!earliest) { out.push(s); break; }
+                if (earliest.match.index > 0) out.push(s.substring(0, earliest.match.index));
+                out.push(earliest.pattern.render(earliest.match));
+                s = s.substring(earliest.match.index + earliest.match[0].length);
+            }
+            return out;
+        };
+
+        const parseTable = (lines, start) => {
+            const tableLines = [];
+            let i = start;
+            while (i < lines.length && lines[i].trim().includes('|') && (lines[i].match(/\|/g) || []).length >= 2) {
+                tableLines.push(lines[i].trim());
+                i++;
+            }
+            if (tableLines.length < 2) return null;
+            const headers = tableLines[0].split('|').map(c => c.trim()).filter(Boolean);
+            let rowStart = 1;
+            if (tableLines[1] && /^[\s|:\-]+$/.test(tableLines[1])) rowStart = 2;
+            const rows = tableLines.slice(rowStart).map(r => r.split('|').map(c => c.trim()).filter(Boolean)).filter(r => r.length > 0);
+            return { headers, rows, end: i };
+        };
+
+        const renderMarkdown = (text) => {
+            if (!text) return null;
+            const lines = text.split('\n');
+            const out = [];
+            let i = 0;
+            let key = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                const trimmed = line.trim();
+
+                if (!trimmed) { out.push(<div key={key++} style={{ height: '0.4rem' }} />); i++; continue; }
+
+                if (trimmed.startsWith('```')) {
+                    const codeLines = [];
+                    i++;
+                    while (i < lines.length && !lines[i].trim().startsWith('```')) { codeLines.push(lines[i]); i++; }
+                    i++;
+                    out.push(<pre key={key++}><code>{codeLines.join('\n')}</code></pre>);
+                    continue;
+                }
+
+                if (/^#### /.test(trimmed)) { out.push(<h4 key={key++}>{parseInline(trimmed.substring(5))}</h4>); i++; continue; }
+                if (/^### /.test(trimmed)) { out.push(<h3 key={key++}>{parseInline(trimmed.substring(4))}</h3>); i++; continue; }
+                if (/^## /.test(trimmed)) { out.push(<h2 key={key++}>{parseInline(trimmed.substring(3))}</h2>); i++; continue; }
+                if (/^# /.test(trimmed)) { out.push(<h1 key={key++}>{parseInline(trimmed.substring(2))}</h1>); i++; continue; }
+
+                if (trimmed === '---' || trimmed === '***' || trimmed === '___') {
+                    out.push(<hr key={key++} />); i++; continue;
+                }
+
+                if (trimmed.startsWith('> ')) {
+                    const qs = [];
+                    while (i < lines.length && lines[i].trim().startsWith('> ')) {
+                        qs.push(lines[i].trim().substring(2));
+                        i++;
+                    }
+                    out.push(<blockquote key={key++}>{qs.map((q, idx) => <div key={idx}>{parseInline(q)}</div>)}</blockquote>);
+                    continue;
+                }
+
+                if (trimmed.includes('|') && (trimmed.match(/\|/g) || []).length >= 2) {
+                    const tbl = parseTable(lines, i);
+                    if (tbl && tbl.headers.length > 1) {
+                        out.push(
+                            <table key={key++}>
+                                <thead><tr>{tbl.headers.map((h, idx) => <th key={idx}>{parseInline(h)}</th>)}</tr></thead>
+                                <tbody>{tbl.rows.map((r, idx) => (
+                                    <tr key={idx}>{r.map((c, j) => <td key={j}>{parseInline(c)}</td>)}</tr>
+                                ))}</tbody>
+                            </table>
+                        );
+                        i = tbl.end;
+                        continue;
+                    }
+                }
+
+                if (/^- \[[ x]\]/.test(trimmed)) {
+                    const items = [];
+                    while (i < lines.length && /^- \[[ x]\]/.test(lines[i].trim())) {
+                        const ck = lines[i].trim();
+                        const checked = ck.startsWith('- [x]');
+                        items.push({ checked, text: ck.substring(5).trim() });
+                        i++;
+                    }
+                    out.push(
+                        <ul key={key++} style={{ listStyle: 'none', paddingLeft: '1rem' }}>
+                            {items.map((it, idx) => (
+                                <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                                    <input type="checkbox" checked={it.checked} readOnly style={{ marginTop: '0.4rem' }} />
+                                    <span style={{ textDecoration: it.checked ? 'line-through' : 'none', color: it.checked ? '#9ca3af' : 'inherit' }}>{parseInline(it.text)}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    );
+                    continue;
+                }
+
+                if (/^[-*] /.test(trimmed)) {
+                    const items = [];
+                    while (i < lines.length && /^[-*] /.test(lines[i].trim())) {
+                        items.push(lines[i].trim().substring(2));
+                        i++;
+                    }
+                    out.push(<ul key={key++}>{items.map((it, idx) => <li key={idx}>{parseInline(it)}</li>)}</ul>);
+                    continue;
+                }
+
+                if (/^\d+\.\s/.test(trimmed)) {
+                    const items = [];
+                    while (i < lines.length && /^\d+\.\s/.test(lines[i].trim())) {
+                        items.push(lines[i].trim().replace(/^\d+\.\s/, ''));
+                        i++;
+                    }
+                    out.push(<ol key={key++}>{items.map((it, idx) => <li key={idx}>{parseInline(it)}</li>)}</ol>);
+                    continue;
+                }
+
+                out.push(<p key={key++}>{parseInline(line)}</p>);
+                i++;
+            }
+            return <>{out}</>;
+        };
+
+        // Securities table parser
+        const parseSecuritiesTable = (text) => {
             const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
             const tables = [];
             let i = 0;
-
             while (i < lines.length) {
                 const line = lines[i];
-                // 테이블 감지: | 가 3개 이상 포함된 줄
                 if (line.includes('|') && (line.match(/\|/g) || []).length >= 3) {
                     let j = i;
                     const tableLines = [];
-
                     while (j < lines.length) {
                         const l = lines[j];
                         if (l.includes('|') && (l.match(/\|/g) || []).length >= 3) {
                             tableLines.push(l);
                             j++;
-                        } else {
-                            break;
-                        }
+                        } else break;
                     }
-
                     if (tableLines.length >= 2) {
                         let headers = tableLines[0].split('|').map(c => c.trim()).filter(Boolean);
                         let rowStart = 1;
-
-                        // 구분선(---) 스킵
-                        if (tableLines[1] && tableLines[1].match(/^[\s|:-]+$/)) {
-                            rowStart = 2;
-                        }
-
+                        if (tableLines[1] && tableLines[1].match(/^[\s|:-]+$/)) rowStart = 2;
                         const rows = tableLines.slice(rowStart).map(row =>
                             row.split('|').map(c => c.trim()).filter(Boolean)
                         ).filter(row => row.length > 0 && row.length === headers.length);
-
-                        if (headers.length > 0) {
-                            tables.push({ headers, rows });
-                        }
+                        if (headers.length > 0) tables.push({ headers, rows });
                     }
                     i = j;
                     continue;
@@ -313,291 +571,656 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
             return tables;
         };
 
-        /**
-         * 증권 보고서용 컨텐츠 렌더러 (테이블 자동 인식 + 개선된 분리 로직)
-         */
+        // SVG Chart for investment reports
+        const InvestmentChart = ({ data }) => {
+            if (!data || !data.headers || !data.rows || data.rows.length < 1) return null;
+            const labels = data.headers.slice(1);
+            const numCols = labels.length;
+            if (numCols === 0) return null;
+            const series = data.rows.map(r => ({
+                name: r[0],
+                values: r.slice(1).map(v => parseFloat(String(v).replace(/[,\s원%]/g, '')) || 0)
+            })).slice(0, 3);
+            const allValues = series.flatMap(s => s.values);
+            const max = Math.max(...allValues, 1);
+            const W = 540, H = 220, P = 36;
+            const groupW = (W - 2 * P) / numCols;
+            const colors = ['#dc2626', '#3b82f6', '#10b981'];
+            return (
+                <div style={{ margin: '1rem 0', padding: '1rem', background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb' }}>
+                    <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6b7280', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📊 재무 추이</p>
+                    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
+                        {[0, 0.25, 0.5, 0.75, 1].map(t => (
+                            <line key={t} x1={P} x2={W - P} y1={H - P - t * (H - 2 * P)} y2={H - P - t * (H - 2 * P)} stroke="#e5e7eb" strokeWidth="1" />
+                        ))}
+                        {labels.map((lab, i) => {
+                            const cx = P + groupW * i + groupW / 2;
+                            return <text key={i} x={cx} y={H - P + 14} fontSize="9" fill="#6b7280" textAnchor="middle" fontFamily="JetBrains Mono">{lab}</text>;
+                        })}
+                        {series.map((s, sIdx) => {
+                            const barW = Math.max(8, (groupW - 16) / series.length - 2);
+                            return s.values.map((v, vIdx) => {
+                                const x = P + groupW * vIdx + 8 + sIdx * (barW + 2);
+                                const h = (v / max) * (H - 2 * P);
+                                const y = H - P - h;
+                                return <g key={`${sIdx}-${vIdx}`}>
+                                    <rect x={x} y={y} width={barW} height={h} fill={colors[sIdx]} opacity="0.85" rx="2" />
+                                    <text x={x + barW / 2} y={y - 3} fontSize="8" fill={colors[sIdx]} textAnchor="middle" fontFamily="JetBrains Mono" fontWeight="bold">
+                                        {v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0)}
+                                    </text>
+                                </g>;
+                            });
+                        })}
+                        <line x1={P} x2={W - P} y1={H - P} y2={H - P} stroke="#9ca3af" strokeWidth="1.5" />
+                        <line x1={P} x2={P} y1={P} y2={H - P} stroke="#9ca3af" strokeWidth="1.5" />
+                    </svg>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        {series.map((s, i) => (
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.7rem', color: '#374151' }}>
+                                <span style={{ width: 12, height: 12, background: colors[i], borderRadius: 2, display: 'inline-block' }} />
+                                <span style={{ fontFamily: 'JetBrains Mono' }}>{s.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
         const SecuritiesContentRenderer = ({ content }) => {
-            const tables = parseMarkdownTable(content);
             const lines = content.split('\n');
             const parts = [];
             let lastIndex = 0;
             let lineIndex = 0;
-
             while (lineIndex < lines.length) {
                 const trimmed = lines[lineIndex].trim();
-
-                // 개선된 테이블 감지
                 if (trimmed.includes('|') && (trimmed.match(/\|/g) || []).length >= 3) {
                     const tableStart = lineIndex;
                     let tableEnd = lineIndex + 1;
-
                     while (tableEnd < lines.length) {
-                        const nextTrim = lines[tableEnd].trim();
-                        if (nextTrim.includes('|') && (nextTrim.match(/\|/g) || []).length >= 3) {
-                            tableEnd++;
-                        } else {
-                            break;
-                        }
+                        const nt = lines[tableEnd].trim();
+                        if (nt.includes('|') && (nt.match(/\|/g) || []).length >= 3) tableEnd++;
+                        else break;
                     }
-
-                    // 테이블 이전 텍스트
-                    if (tableStart > lastIndex) {
-                        parts.push({
-                            type: 'text',
-                            content: lines.slice(lastIndex, tableStart).join('\n')
-                        });
-                    }
-
-                    // 테이블 파싱
+                    if (tableStart > lastIndex) parts.push({ type: 'text', content: lines.slice(lastIndex, tableStart).join('\n') });
                     const tableText = lines.slice(tableStart, tableEnd).join('\n');
-                    const parsedTables = parseMarkdownTable(tableText);
-                    if (parsedTables.length > 0) {
-                        parts.push({
-                            type: 'table',
-                            data: parsedTables[0]
-                        });
-                    }
-
+                    const parsed = parseSecuritiesTable(tableText);
+                    if (parsed.length > 0) parts.push({ type: 'table', data: parsed[0] });
                     lastIndex = tableEnd;
                     lineIndex = tableEnd;
-                } else {
-                    lineIndex++;
-                }
+                } else lineIndex++;
             }
-
-            // 마지막 남은 텍스트
-            if (lastIndex < lines.length) {
-                parts.push({
-                    type: 'text',
-                    content: lines.slice(lastIndex).join('\n')
-                });
-            }
+            if (lastIndex < lines.length) parts.push({ type: 'text', content: lines.slice(lastIndex).join('\n') });
 
             return (
-                <div>
+                <div className="md-body securities-md">
                     {parts.map((part, idx) => {
-                        if (part.type === 'text') {
-                            return <div key={idx} className="whitespace-pre-wrap mb-4 text-gray-800 leading-relaxed">{part.content}</div>;
-                        } else {
-                            return (
-                                <div key={idx} className="my-6 overflow-x-auto">
-                                    <table className="w-full border-collapse border-2 border-gray-300">
+                        if (part.type === 'text') return <div key={idx}>{renderMarkdown(part.content)}</div>;
+                        return (
+                            <div key={idx}>
+                                <div style={{ overflowX: 'auto', margin: '1rem 0' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '2px solid #d1d5db' }}>
                                         <thead>
-                                            <tr className="bg-red-600 text-white">
-                                                {part.data.headers.map((header, i) => (
-                                                    <th key={i} className="border border-gray-300 px-4 py-3 text-left font-bold text-sm">
-                                                        {header}
-                                                    </th>
+                                            <tr style={{ background: '#dc2626', color: 'white' }}>
+                                                {part.data.headers.map((h, i) => (
+                                                    <th key={i} style={{ border: '1px solid #d1d5db', padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 700, fontSize: '0.85rem' }}>{h}</th>
                                                 ))}
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {part.data.rows.map((row, i) => (
-                                                <tr key={i} className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                                                <tr key={i} style={{ background: i % 2 === 0 ? '#f9fafb' : '#ffffff' }}>
                                                     {row.map((cell, j) => (
-                                                        <td key={j} className="border border-gray-300 px-4 py-2 text-sm">
-                                                            {cell}
-                                                        </td>
+                                                        <td key={j} style={{ border: '1px solid #d1d5db', padding: '0.5rem 1rem', fontSize: '0.85rem' }}>{cell}</td>
                                                     ))}
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
-                            );
-                        }
+                                <InvestmentChart data={part.data} />
+                            </div>
+                        );
                     })}
                 </div>
             );
         };
 
-        // ═══════════════════════════════════════════════════════════════
-        // 📦 STATE MANAGEMENT
-        // ═══════════════════════════════════════════════════════════════
-        const initialState = {
-            documents: [],
-            currentDocId: null,
-            lastSaved: null
+        const calcStats = (text) => {
+            if (!text) return { chars: 0, words: 0, lines: 0, readMin: 0 };
+            const chars = text.length;
+            const words = text.trim().split(/\s+/).filter(Boolean).length;
+            const lines = text.split('\n').length;
+            const readMin = Math.max(1, Math.ceil(words / 250));
+            return { chars, words, lines, readMin };
         };
 
-        const actionTypes = {
-            CREATE_DOCUMENT: 'CREATE_DOCUMENT',
-            UPDATE_DOCUMENT: 'UPDATE_DOCUMENT',
-            DELETE_DOCUMENT: 'DELETE_DOCUMENT',
-            SELECT_DOCUMENT: 'SELECT_DOCUMENT',
-            LOAD_DOCUMENTS: 'LOAD_DOCUMENTS'
+        // ========== Reducer ==========
+        const initialState = { documents: [], currentDocId: null, lastSaved: null };
+        const actions = {
+            CREATE: 'CREATE', UPDATE: 'UPDATE', DELETE: 'DELETE',
+            SELECT: 'SELECT', LOAD: 'LOAD', TOGGLE_PIN: 'TOGGLE_PIN',
+            DUPLICATE: 'DUPLICATE', BULK_LOAD: 'BULK_LOAD'
         };
 
-        function documentReducer(state, action) {
+        const buildNewDoc = (templateId, initialData = {}) => {
+            const tmpl = TEMPLATES[templateId];
+            return {
+                id: Date.now().toString() + Math.random().toString(36).substring(2, 6),
+                templateId,
+                pinned: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                data: tmpl.isSecurities ? {
+                    company: '기업명',
+                    title: tmpl.name,
+                    content: tmpl.defaultContent,
+                    author: '임채훈 수석 애널리스트',
+                    rating: 'BUY',
+                    target_price: '85,000',
+                    current_price: '68,500',
+                    ...initialData
+                } : {
+                    organization: '한국기술교육원',
+                    recipient: '수신자',
+                    title: tmpl.name,
+                    content: tmpl.defaultContent,
+                    author: '임채훈 원장',
+                    ...initialData
+                }
+            };
+        };
+
+        function reducer(state, action) {
             switch (action.type) {
-                case actionTypes.CREATE_DOCUMENT:
-                    const newDoc = {
-                        id: Date.now().toString(),
-                        templateId: action.payload.templateId,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                        data: TEMPLATES[action.payload.templateId].isSecurities ? {
-                            company: '기업명',
-                            title: TEMPLATES[action.payload.templateId].name,
-                            content: TEMPLATES[action.payload.templateId].defaultContent,
-                            author: '임채훈 수석 애널리스트',
-                            rating: 'BUY',
-                            target_price: '85,000',
-                            current_price: '68,500',
-                            ...action.payload.initialData
-                        } : {
-                            organization: '한국기술교육원',
-                            recipient: '수신자',
-                            title: TEMPLATES[action.payload.templateId].name,
-                            content: TEMPLATES[action.payload.templateId].defaultContent,
-                            author: '임채훈 원장',
-                            ...action.payload.initialData
-                        }
-                    };
+                case actions.CREATE: {
+                    const doc = buildNewDoc(action.payload.templateId, action.payload.initialData);
+                    return { ...state, documents: [...state.documents, doc], currentDocId: doc.id };
+                }
+                case actions.UPDATE:
                     return {
                         ...state,
-                        documents: [...state.documents, newDoc],
-                        currentDocId: newDoc.id
-                    };
-                case actionTypes.UPDATE_DOCUMENT:
-                    return {
-                        ...state,
-                        documents: state.documents.map(doc =>
-                            doc.id === action.payload.id
-                                ? { ...doc, data: { ...doc.data, ...action.payload.updates }, updatedAt: new Date().toISOString() }
-                                : doc
+                        documents: state.documents.map(d =>
+                            d.id === action.payload.id
+                                ? { ...d, data: { ...d.data, ...action.payload.updates }, updatedAt: new Date().toISOString() }
+                                : d
                         ),
                         lastSaved: new Date()
                     };
-                case actionTypes.DELETE_DOCUMENT:
-                    const remainingDocs = state.documents.filter(doc => doc.id !== action.payload.id);
-                    return {
-                        ...state,
-                        documents: remainingDocs,
-                        currentDocId: remainingDocs.length > 0 ? remainingDocs[0].id : null
-                    };
-                case actionTypes.SELECT_DOCUMENT:
-                    return {
-                        ...state,
-                        currentDocId: action.payload.id
-                    };
-                case actionTypes.LOAD_DOCUMENTS:
+                case actions.DELETE: {
+                    const remaining = state.documents.filter(d => d.id !== action.payload.id);
+                    return { ...state, documents: remaining, currentDocId: remaining[0]?.id || null };
+                }
+                case actions.SELECT:
+                    return { ...state, currentDocId: action.payload.id };
+                case actions.LOAD:
                     return {
                         ...state,
                         documents: action.payload.documents,
-                        currentDocId: action.payload.documents.length > 0 ? action.payload.documents[0].id : null
+                        currentDocId: action.payload.documents[0]?.id || null
                     };
-                default:
-                    return state;
+                case actions.TOGGLE_PIN:
+                    return {
+                        ...state,
+                        documents: state.documents.map(d =>
+                            d.id === action.payload.id ? { ...d, pinned: !d.pinned } : d
+                        )
+                    };
+                case actions.DUPLICATE: {
+                    const orig = state.documents.find(d => d.id === action.payload.id);
+                    if (!orig) return state;
+                    const copy = {
+                        ...orig,
+                        id: Date.now().toString() + Math.random().toString(36).substring(2, 6),
+                        pinned: false,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        data: { ...orig.data, title: orig.data.title + ' (사본)' }
+                    };
+                    return { ...state, documents: [...state.documents, copy], currentDocId: copy.id };
+                }
+                case actions.BULK_LOAD: {
+                    const merged = [...state.documents, ...action.payload.documents];
+                    return { ...state, documents: merged, currentDocId: action.payload.documents[0]?.id || state.currentDocId };
+                }
+                default: return state;
             }
         }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🎨 UI COMPONENTS
-        // ═══════════════════════════════════════════════════════════════
+        // ========== Components ==========
         const Toast = ({ message, onClose }) => {
             useEffect(() => {
-                const timer = setTimeout(onClose, 2000);
-                return () => clearTimeout(timer);
+                const t = setTimeout(onClose, 2200);
+                return () => clearTimeout(t);
             }, [onClose]);
             return <div className="toast no-print">{message}</div>;
         };
 
-        const StatusBar = ({ status, lastSaved }) => (
-            <div className="flex items-center gap-3 px-6 py-3 bg-[#151b24] border-t border-[#22d3ee]/20 no-print">
-                <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${status === 'saved' ? 'bg-emerald-400' : 'bg-amber-400'} status-indicator`} />
-                    <span className="text-xs text-gray-400 mono">
-                        {status === 'saved' ? '✓ 저장됨' : '• 작성 중'}
-                    </span>
-                </div>
-                {lastSaved && (
-                    <span className="text-xs text-gray-500 mono">
-                        마지막 저장: {new Date(lastSaved).toLocaleTimeString('ko-KR')}
-                    </span>
-                )}
-            </div>
-        );
-
-        const FieldInput = ({ label, value, onChange, type = 'text', placeholder }) => (
-            <div className="space-y-1">
-                <label className="text-[10px] font-bold text-[#22d3ee] uppercase tracking-widest block mono">
+        const FieldInput = ({ label, value, onChange, type = 'text', placeholder, rows = 14 }) => (
+            <div style={{ marginBottom: '0.75rem' }}>
+                <label className="text-[10px] font-bold uppercase tracking-widest block mono mb-1" style={{ color: 'var(--accent)' }}>
                     {label}
                 </label>
                 {type === 'textarea' ? (
                     <textarea
-                        className="w-full bg-[#0a0e14] border border-[#22d3ee]/30 rounded-lg p-3 text-sm text-gray-200 focus:border-[#22d3ee] focus:ring-1 focus:ring-[#22d3ee] outline-none transition-all resize-none mono"
-                        rows="12"
+                        className="w-full bg-[#0a0e14] rounded-lg p-3 text-sm text-gray-200 outline-none resize-none mono"
+                        style={{ border: '1px solid var(--accent-border)' }}
+                        rows={rows}
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
                         placeholder={placeholder}
+                        onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                        onBlur={(e) => e.target.style.borderColor = 'var(--accent-border)'}
                     />
                 ) : (
                     <input
                         type={type}
-                        className="w-full bg-[#0a0e14] border border-[#22d3ee]/30 rounded-lg p-3 text-sm text-gray-200 focus:border-[#22d3ee] focus:ring-1 focus:ring-[#22d3ee] outline-none transition-all mono"
+                        className="w-full bg-[#0a0e14] rounded-lg p-2.5 text-sm text-gray-200 outline-none mono"
+                        style={{ border: '1px solid var(--accent-border)' }}
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
                         placeholder={placeholder}
+                        onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                        onBlur={(e) => e.target.style.borderColor = 'var(--accent-border)'}
                     />
                 )}
             </div>
         );
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🏗️ MAIN APPLICATION (보완 완료)
-        // ═══════════════════════════════════════════════════════════════
+        const StatusBar = ({ stats, lastSaved, zoom, theme, onThemeChange }) => (
+            <div className="flex items-center justify-between gap-3 px-6 py-2 bg-[#0d1117] border-t no-print" style={{ borderColor: 'var(--accent-border)' }}>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-400 status-indicator" />
+                        <span className="text-[10px] mono text-gray-400">SYNCED</span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 mono">
+                        {stats.words} 단어 · {stats.chars} 글자 · 약 {stats.readMin}분 읽기
+                    </span>
+                </div>
+                <div className="flex items-center gap-3">
+                    {lastSaved && (
+                        <span className="text-[10px] text-gray-500 mono">
+                            저장: {new Date(lastSaved).toLocaleTimeString('ko-KR')}
+                        </span>
+                    )}
+                    <div className="flex items-center gap-1">
+                        {THEMES.map(t => (
+                            <button
+                                key={t}
+                                onClick={() => onThemeChange(t)}
+                                title={t}
+                                className="w-4 h-4 rounded-full transition-transform hover:scale-110"
+                                style={{
+                                    background: t === 'cyber' ? '#22d3ee' : t === 'amber' ? '#fbbf24' : t === 'violet' ? '#a78bfa' : t === 'emerald' ? '#34d399' : '#fb7185',
+                                    outline: theme === t ? '2px solid #fff' : 'none',
+                                    outlineOffset: '1px',
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            />
+                        ))}
+                    </div>
+                    <span className="text-[10px] mono text-gray-500">{Math.round(zoom * 100)}%</span>
+                </div>
+            </div>
+        );
+
+        const CommandPalette = ({ open, onClose, commands }) => {
+            const [query, setQuery] = useState('');
+            const [activeIdx, setActiveIdx] = useState(0);
+            const inputRef = useRef(null);
+
+            useEffect(() => {
+                if (open) {
+                    setQuery('');
+                    setActiveIdx(0);
+                    setTimeout(() => inputRef.current?.focus(), 50);
+                }
+            }, [open]);
+
+            const filtered = useMemo(() => {
+                if (!query) return commands;
+                const q = query.toLowerCase();
+                return commands.filter(c =>
+                    c.label.toLowerCase().includes(q) ||
+                    (c.section || '').toLowerCase().includes(q) ||
+                    (c.hint || '').toLowerCase().includes(q)
+                );
+            }, [query, commands]);
+
+            useEffect(() => { setActiveIdx(0); }, [query]);
+
+            const grouped = useMemo(() => {
+                const g = {};
+                filtered.forEach(c => {
+                    const s = c.section || 'Actions';
+                    if (!g[s]) g[s] = [];
+                    g[s].push(c);
+                });
+                return g;
+            }, [filtered]);
+
+            const flatList = filtered;
+
+            const handleKey = (e) => {
+                if (e.key === 'Escape') { onClose(); return; }
+                if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx(i => Math.min(flatList.length - 1, i + 1)); }
+                if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx(i => Math.max(0, i - 1)); }
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const cmd = flatList[activeIdx];
+                    if (cmd) { cmd.action(); onClose(); }
+                }
+            };
+
+            if (!open) return null;
+            return (
+                <div className="cmd-backdrop fade-in no-print" onClick={onClose}>
+                    <div className="cmd-panel" onClick={(e) => e.stopPropagation()}>
+                        <input
+                            ref={inputRef}
+                            className="cmd-input"
+                            placeholder="명령 검색... (템플릿, 문서, 액션)"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            onKeyDown={handleKey}
+                        />
+                        <div style={{ maxHeight: '50vh', overflowY: 'auto', padding: '6px 0' }}>
+                            {flatList.length === 0 && (
+                                <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280', fontSize: '13px' }}>
+                                    매칭되는 명령이 없습니다
+                                </div>
+                            )}
+                            {Object.entries(grouped).map(([section, items]) => (
+                                <div key={section}>
+                                    <div className="cmd-section">{section}</div>
+                                    {items.map((cmd) => {
+                                        const idx = flatList.indexOf(cmd);
+                                        return (
+                                            <div
+                                                key={cmd.id}
+                                                className={`cmd-item ${idx === activeIdx ? 'active' : ''}`}
+                                                onClick={() => { cmd.action(); onClose(); }}
+                                                onMouseEnter={() => setActiveIdx(idx)}
+                                            >
+                                                <span style={{ fontSize: '16px', width: '20px', textAlign: 'center' }}>{cmd.icon}</span>
+                                                <span style={{ flex: 1 }}>{cmd.label}</span>
+                                                {cmd.shortcut && <span className="kbd">{cmd.shortcut}</span>}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ padding: '8px 16px', borderTop: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#6b7280', fontFamily: 'JetBrains Mono' }}>
+                            <span><span className="kbd">↑↓</span> 이동 · <span className="kbd">↵</span> 실행 · <span className="kbd">esc</span> 닫기</span>
+                            <span>{flatList.length} 항목</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const GeneralDocument = ({ doc, template, canvasRef, watermark }) => (
+            <section className="document-canvas">
+                {watermark !== 'NONE' && (
+                    <div className="watermark-overlay">
+                        <span className="watermark-text">{watermark}</span>
+                    </div>
+                )}
+                <div className="border-b-2 border-gray-800 pb-6 mb-6 px-12 pt-12" style={{ position: 'relative', zIndex: 10 }}>
+                    <div className="text-center mb-6">
+                        <h2 className="text-5xl font-black tracking-tight display mb-2 serif-kr">{doc.data.organization}</h2>
+                        <div className="h-1 w-32 mx-auto mb-3" style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}></div>
+                        <code className="text-xs font-bold text-gray-600 mono tracking-wider uppercase">
+                            {template?.category} · official document
+                        </code>
+                    </div>
+                    <div className="border border-gray-300 rounded-lg p-4 bg-gray-50 grid grid-cols-2 gap-3 text-xs mono">
+                        <div className="flex justify-between border-b border-gray-200 pb-2">
+                            <span className="font-bold text-gray-600">문서번호:</span>
+                            <span className="text-gray-800">{template?.id}-{doc.id.substring(0, 6).toUpperCase()}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-2">
+                            <span className="font-bold text-gray-600">시행일자:</span>
+                            <span className="text-gray-800">{new Date().toLocaleDateString('ko-KR')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="font-bold text-gray-600">보존기간:</span>
+                            <span className="text-gray-800">영구</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="font-bold text-gray-600">문서종류:</span>
+                            <span className="text-gray-800">{template?.name}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="px-12 mb-8" style={{ position: 'relative', zIndex: 10 }}>
+                    <table className="w-full border-2 border-gray-800 text-sm">
+                        <tbody>
+                            <tr className="border-b border-gray-800">
+                                <td className="font-bold bg-gray-100 px-6 py-3 w-24 text-gray-700 border-r-2 border-gray-800">수신</td>
+                                <td className="px-6 py-3 font-semibold text-base">{doc.data.recipient}</td>
+                            </tr>
+                            <tr className="border-b border-gray-800">
+                                <td className="font-bold bg-gray-100 px-6 py-3 text-gray-700 border-r-2 border-gray-800">발신</td>
+                                <td className="px-6 py-3">{doc.data.organization}</td>
+                            </tr>
+                            <tr>
+                                <td className="font-bold bg-gray-100 px-6 py-3 text-gray-700 border-r-2 border-gray-800">제목</td>
+                                <td className="px-6 py-3 font-bold text-base">{doc.data.title}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <article className="px-12 mb-12" style={{ position: 'relative', zIndex: 10 }}>
+                    <div className="border-2 border-gray-200 rounded-lg p-8 bg-white min-h-[300px]">
+                        <div className="md-body">
+                            {renderMarkdown(doc.data.content)}
+                        </div>
+                    </div>
+                </article>
+
+                <div className="px-12 mb-10" style={{ position: 'relative', zIndex: 10 }}>
+                    <div className="border-2 border-gray-800">
+                        <div className="grid grid-cols-4 text-center">
+                            {['담당', '검토', '승인', '발신'].map(label => (
+                                <div key={label} className="border-r-2 border-gray-800 last:border-r-0 py-2 bg-gray-100">
+                                    <p className="text-xs font-bold text-gray-600">{label}</p>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="grid grid-cols-4 text-center border-t-2 border-gray-800">
+                            <div className="border-r-2 border-gray-800 py-12"></div>
+                            <div className="border-r-2 border-gray-800 py-12"></div>
+                            <div className="border-r-2 border-gray-800 py-12"></div>
+                            <div className="py-8 flex items-center justify-center relative">
+                                <canvas ref={canvasRef} width="200" height="200" className="w-24 h-24 opacity-95" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="px-12 mb-12 text-right" style={{ position: 'relative', zIndex: 10 }}>
+                    <div className="inline-block text-left">
+                        <p className="text-sm text-gray-600 mb-1">발신자</p>
+                        <div className="border-b-2 border-gray-800 pb-2 px-4">
+                            <p className="text-2xl font-bold tracking-tight serif-kr">{doc.data.author}</p>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1 text-right">(인)</p>
+                    </div>
+                </div>
+
+                <footer className="px-12 pb-8" style={{ position: 'relative', zIndex: 10 }}>
+                    <div className="border-t-2 border-gray-300 pt-3">
+                        <div className="grid grid-cols-3 gap-4 text-[10px] text-gray-500 mono">
+                            <div>
+                                <p className="font-bold mb-1">문서검증번호</p>
+                                <p>{doc.id.substring(0, 16).toUpperCase()}</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="font-bold mb-1">발행시스템</p>
+                                <p>ProDoc Enterprise v3.0</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="font-bold mb-1">발행일시</p>
+                                <p>{new Date().toLocaleString('ko-KR')}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="text-center text-[9px] text-gray-400 mt-2 mono">
+                        <p>이 문서는 전자문서 및 전자거래 기본법에 따라 법적 효력을 가집니다.</p>
+                    </div>
+                </footer>
+            </section>
+        );
+
+        const SecuritiesDocument = ({ doc, watermark }) => {
+            const targetPrice = parseFloat((doc.data.target_price || '0').replace(/,/g, ''));
+            const currentPrice = parseFloat((doc.data.current_price || '0').replace(/,/g, ''));
+            const upside = currentPrice > 0 ? ((targetPrice - currentPrice) / currentPrice * 100).toFixed(1) : '0.0';
+            return (
+                <section className="document-canvas">
+                    {watermark !== 'NONE' && (
+                        <div className="watermark-overlay">
+                            <span className="watermark-text">{watermark}</span>
+                        </div>
+                    )}
+                    <div style={{ position: 'relative', zIndex: 10 }}>
+                        <div className="bg-gradient-to-r from-red-700 to-red-600 px-12 py-7">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h1 className="text-4xl font-black text-white display tracking-tight">한화투자증권</h1>
+                                    <p className="text-red-100 text-sm mt-1 mono font-semibold">HANWHA INVESTMENT &amp; SECURITIES</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-white text-xs font-bold mono">Research Center</p>
+                                    <p className="text-red-100 text-[10px] mono">{new Date().toLocaleDateString('ko-KR')}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-50 border-b-4 border-red-600 px-12 py-5">
+                            <div className="flex justify-between items-end">
+                                <div>
+                                    <h2 className="text-3xl font-black text-gray-900 mb-1 serif-kr">{doc.data.company || '기업명'}</h2>
+                                    <p className="text-gray-600 text-sm font-semibold">{doc.data.title}</p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="bg-red-600 text-white px-6 py-2 rounded-lg inline-block">
+                                        <p className="text-xs font-bold">투자의견</p>
+                                        <p className="text-2xl font-black">{doc.data.rating || 'BUY'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="px-12 py-5 bg-white border-b border-gray-200">
+                            <div className="grid grid-cols-4 gap-6">
+                                <div className="border-l-4 border-red-600 pl-4">
+                                    <p className="text-xs text-gray-500 font-semibold mb-1">목표주가</p>
+                                    <p className="text-2xl font-black text-red-600">{doc.data.target_price || '85,000'}원</p>
+                                </div>
+                                <div className="border-l-4 border-gray-300 pl-4">
+                                    <p className="text-xs text-gray-500 font-semibold mb-1">현재주가</p>
+                                    <p className="text-2xl font-black text-gray-700">{doc.data.current_price || '68,500'}원</p>
+                                </div>
+                                <div className="border-l-4 border-blue-600 pl-4">
+                                    <p className="text-xs text-gray-500 font-semibold mb-1">상승여력</p>
+                                    <p className="text-2xl font-black text-blue-600">{upside.startsWith('-') ? '' : '+'}{upside}%</p>
+                                </div>
+                                <div className="border-l-4 border-gray-300 pl-4">
+                                    <p className="text-xs text-gray-500 font-semibold mb-1">시가총액</p>
+                                    <p className="text-2xl font-black text-gray-700">8.5조원</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <article className="px-12 py-6">
+                            <div className="text-gray-800 leading-relaxed text-[15px]" style={{ fontFamily: "'Crimson Pro', serif" }}>
+                                <SecuritiesContentRenderer content={doc.data.content} />
+                            </div>
+                        </article>
+
+                        <div className="px-12 py-5 bg-gray-50 border-t-2 border-gray-200">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="text-xs text-gray-500 mb-1">애널리스트</p>
+                                    <p className="text-lg font-bold text-gray-900">{doc.data.author}</p>
+                                    <p className="text-xs text-gray-600 mono">research@hanwhawm.com</p>
+                                </div>
+                                <div className="text-right text-[10px] text-gray-500 mono">
+                                    <p>Report ID: {doc.id.substring(0, 8).toUpperCase()}</p>
+                                    <p>Published: {new Date().toISOString().substring(0, 19)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <footer className="px-12 py-5 bg-gray-100 border-t border-gray-300">
+                            <p className="text-[9px] text-gray-600 leading-relaxed">
+                                본 자료는 고객의 증권투자를 돕기 위해 작성된 참고자료이며, 어떠한 경우에도 법적 책임소재에 대한 증빙자료로 사용될 수 없습니다.
+                                본 자료는 당사의 저작물로서 모든 저작권은 당사에게 있으며, 어떠한 경우에도 당사의 동의 없이 복제, 배포, 전송, 기타 저작권 침해행위를 할 수 없습니다.
+                                투자자는 금융투자상품에 대하여 당사로부터 충분한 설명을 받을 권리가 있으며, 투자 전 상품설명서 및 약관을 반드시 읽어보시기 바랍니다.
+                            </p>
+                            <div className="flex justify-between items-center mt-3 text-[10px] text-gray-500 font-bold">
+                                <span>한화투자증권 리서치센터</span>
+                                <span>Tel: 02-3772-7700</span>
+                            </div>
+                        </footer>
+                    </div>
+                </section>
+            );
+        };
+
+        // ========== Main App ==========
         const ProDocEngine = () => {
-            const [state, dispatch] = useReducer(documentReducer, initialState);
+            const [state, dispatch] = useReducer(reducer, initialState);
             const [savedDocs, setSavedDocs] = useLocalStorage(STORAGE_KEY, []);
+            const [settings, setSettings] = useLocalStorage(SETTINGS_KEY, {
+                theme: 'cyber',
+                zoom: 0.7,
+                watermark: 'NONE',
+                sidebarCollapsed: false,
+                sortBy: 'recent',
+                filterTab: 'all'
+            });
             const [toast, setToast] = useState(null);
-            const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+            const [paletteOpen, setPaletteOpen] = useState(false);
+            const [searchQuery, setSearchQuery] = useState('');
             const canvasRef = useRef(null);
             const printRef = useRef(null);
+            const fileInputRef = useRef(null);
 
-            // 초기 로드
+            useEffect(() => {
+                document.body.dataset.theme = settings.theme;
+            }, [settings.theme]);
+
             useEffect(() => {
                 if (savedDocs.length > 0) {
-                    dispatch({ type: actionTypes.LOAD_DOCUMENTS, payload: { documents: savedDocs } });
+                    dispatch({ type: actions.LOAD, payload: { documents: savedDocs } });
                 } else {
-                    dispatch({
-                        type: actionTypes.CREATE_DOCUMENT,
-                        payload: { templateId: 'LECTURE_CURRICULUM' }
-                    });
+                    dispatch({ type: actions.CREATE, payload: { templateId: 'LECTURE_CURRICULUM' } });
                 }
             }, []);
 
-            // 자동 저장
             useAutoSave(state.documents, (docs) => {
-                if (docs.length > 0) {
-                    setSavedDocs(docs);
-                }
+                if (docs.length > 0) setSavedDocs(docs);
             });
 
-            const currentDoc = useMemo(() =>
-                state.documents.find(doc => doc.id === state.currentDocId),
-                [state.documents, state.currentDocId]
-            );
-
-            const currentTemplate = useMemo(() =>
-                currentDoc ? TEMPLATES[currentDoc.templateId] : null,
-                [currentDoc]
-            );
+            const currentDoc = useMemo(() => state.documents.find(d => d.id === state.currentDocId), [state.documents, state.currentDocId]);
+            const currentTemplate = useMemo(() => currentDoc ? TEMPLATES[currentDoc.templateId] : null, [currentDoc]);
+            const stats = useMemo(() => calcStats(currentDoc?.data?.content || ''), [currentDoc]);
 
             const updateField = useCallback((field, value) => {
                 if (!currentDoc) return;
-                dispatch({
-                    type: actionTypes.UPDATE_DOCUMENT,
-                    payload: {
-                        id: currentDoc.id,
-                        updates: { [field]: value }
-                    }
-                });
+                dispatch({ type: actions.UPDATE, payload: { id: currentDoc.id, updates: { [field]: value } } });
             }, [currentDoc]);
 
             const createNewDocument = useCallback((templateId) => {
-                dispatch({ type: actionTypes.CREATE_DOCUMENT, payload: { templateId } });
-                setToast('✅ 새 문서가 생성되었습니다');
+                dispatch({ type: actions.CREATE, payload: { templateId } });
+                setToast(`✨ ${TEMPLATES[templateId].name} 생성됨`);
             }, []);
 
             const deleteDocument = useCallback((id) => {
@@ -605,15 +1228,22 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                     setToast('⚠️ 마지막 문서는 삭제할 수 없습니다');
                     return;
                 }
-                dispatch({ type: actionTypes.DELETE_DOCUMENT, payload: { id } });
+                dispatch({ type: actions.DELETE, payload: { id } });
                 setToast('🗑️ 문서가 삭제되었습니다');
             }, [state.documents.length]);
 
-            // PDF 내보내기
+            const duplicateDocument = useCallback((id) => {
+                dispatch({ type: actions.DUPLICATE, payload: { id } });
+                setToast('📑 문서 복제 완료');
+            }, []);
+
+            const togglePin = useCallback((id) => {
+                dispatch({ type: actions.TOGGLE_PIN, payload: { id } });
+            }, []);
+
             const exportToPDF = useCallback(() => {
                 if (!printRef.current) return;
                 setToast('📄 PDF 생성 중...');
-                const element = printRef.current;
                 const opt = {
                     margin: 0,
                     filename: `${currentDoc.data.title || 'document'}.pdf`,
@@ -621,15 +1251,60 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                     html2canvas: { scale: 2, useCORS: true, letterRendering: true },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
-                html2pdf().set(opt).from(element).save().then(() => {
+                html2pdf().set(opt).from(printRef.current).save().then(() => {
                     setToast('🎉 PDF 다운로드 완료');
-                }).catch(err => {
-                    console.error('PDF export error:', err);
-                    setToast('❌ PDF 생성 중 오류');
-                });
+                }).catch(() => setToast('❌ PDF 생성 오류'));
             }, [currentDoc]);
 
-            // 인장 렌더링 (더 선명하게)
+            const exportJSON = useCallback(() => {
+                const blob = new Blob([JSON.stringify(state.documents, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `prodoc-export-${Date.now()}.json`;
+                a.click();
+                setToast('📦 JSON 백업 다운로드 완료');
+            }, [state.documents]);
+
+            const importJSON = useCallback((file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const parsed = JSON.parse(e.target.result);
+                        const docs = Array.isArray(parsed) ? parsed : [parsed];
+                        const valid = docs.filter(d => d.templateId && TEMPLATES[d.templateId] && d.data);
+                        if (valid.length === 0) { setToast('⚠️ 유효한 문서가 없습니다'); return; }
+                        dispatch({ type: actions.BULK_LOAD, payload: { documents: valid } });
+                        setToast(`📥 ${valid.length}개 문서 가져옴`);
+                    } catch (err) {
+                        setToast('❌ JSON 파싱 오류');
+                    }
+                };
+                reader.readAsText(file);
+            }, []);
+
+            const exportTXT = useCallback(() => {
+                const text = `${currentDoc.data.title}\n${'='.repeat(40)}\n\n${currentDoc.data.content}`;
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${currentDoc.data.title || 'document'}.txt`;
+                a.click();
+                setToast('📝 TXT 다운로드 완료');
+            }, [currentDoc]);
+
+            const exportMD = useCallback(() => {
+                const text = `# ${currentDoc.data.title}\n\n${currentDoc.data.content}`;
+                const blob = new Blob([text], { type: 'text/markdown' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${currentDoc.data.title || 'document'}.md`;
+                a.click();
+                setToast('📄 Markdown 다운로드 완료');
+            }, [currentDoc]);
+
             const renderSeal = useCallback(() => {
                 const canvas = canvasRef.current;
                 if (!canvas) return;
@@ -639,25 +1314,19 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 canvas.height = 200 * dpr;
                 ctx.scale(dpr, dpr);
                 ctx.clearRect(0, 0, 200, 200);
-
-                // 외곽 원 (더 두껍고 선명)
                 ctx.strokeStyle = '#dc2626';
                 ctx.lineWidth = 6;
                 ctx.beginPath();
                 ctx.arc(100, 100, 78, 0, Math.PI * 2);
                 ctx.stroke();
-
                 ctx.lineWidth = 2.5;
                 ctx.beginPath();
                 ctx.arc(100, 100, 68, 0, Math.PI * 2);
                 ctx.stroke();
-
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
                 ctx.arc(100, 100, 55, 0, Math.PI * 2);
                 ctx.stroke();
-
-                // 텍스트
                 ctx.fillStyle = '#dc2626';
                 ctx.textAlign = 'center';
                 ctx.font = 'bold 14px JetBrains Mono';
@@ -668,17 +1337,115 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 ctx.fillText('印', 100, 140);
             }, []);
 
-            useEffect(() => { renderSeal(); }, [renderSeal]);
+            useEffect(() => { renderSeal(); }, [renderSeal, currentDoc]);
 
-            // 단축키
-            useKeyboardShortcut(() => {
-                setSavedDocs(state.documents);
-                setToast('💾 수동 저장 완료');
-            }, ['s']);
+            useEffect(() => {
+                const handler = (e) => {
+                    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+                    const mod = isMac ? e.metaKey : e.ctrlKey;
+                    if (mod && e.key.toLowerCase() === 'k') {
+                        e.preventDefault();
+                        setPaletteOpen(p => !p);
+                    } else if (mod && e.key.toLowerCase() === 's') {
+                        e.preventDefault();
+                        setSavedDocs(state.documents);
+                        setToast('💾 저장 완료');
+                    } else if (mod && e.key.toLowerCase() === 'p') {
+                        e.preventDefault();
+                        window.print();
+                    } else if (mod && e.key === '=') {
+                        e.preventDefault();
+                        setSettings(s => ({ ...s, zoom: Math.min(2, s.zoom + 0.1) }));
+                    } else if (mod && e.key === '-') {
+                        e.preventDefault();
+                        setSettings(s => ({ ...s, zoom: Math.max(0.4, s.zoom - 0.1) }));
+                    } else if (mod && e.key === '0') {
+                        e.preventDefault();
+                        setSettings(s => ({ ...s, zoom: 0.7 }));
+                    }
+                };
+                window.addEventListener('keydown', handler);
+                return () => window.removeEventListener('keydown', handler);
+            }, [state.documents]);
 
-            useKeyboardShortcut(() => {
-                window.print();
-            }, ['p']);
+            const visibleDocs = useMemo(() => {
+                let docs = state.documents;
+                if (settings.filterTab === 'pinned') docs = docs.filter(d => d.pinned);
+                else if (settings.filterTab === 'securities') docs = docs.filter(d => TEMPLATES[d.templateId]?.isSecurities);
+                else if (settings.filterTab === 'business') docs = docs.filter(d => TEMPLATES[d.templateId]?.category === 'business');
+                if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    docs = docs.filter(d =>
+                        (d.data.title || '').toLowerCase().includes(q) ||
+                        (d.data.content || '').toLowerCase().includes(q) ||
+                        TEMPLATES[d.templateId].name.toLowerCase().includes(q)
+                    );
+                }
+                if (settings.sortBy === 'recent') docs = [...docs].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                else if (settings.sortBy === 'name') docs = [...docs].sort((a, b) => (a.data.title || '').localeCompare(b.data.title || ''));
+                else if (settings.sortBy === 'created') docs = [...docs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                docs = [...docs].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+                return docs;
+            }, [state.documents, settings.filterTab, settings.sortBy, searchQuery]);
+
+            const commands = useMemo(() => {
+                const cmds = [];
+                Object.entries(TEMPLATES).forEach(([key, tmpl]) => {
+                    cmds.push({
+                        id: `new-${key}`,
+                        section: '새 문서',
+                        icon: tmpl.icon,
+                        label: `생성: ${tmpl.name}`,
+                        hint: tmpl.category,
+                        action: () => createNewDocument(key)
+                    });
+                });
+                state.documents.forEach(d => {
+                    cmds.push({
+                        id: `open-${d.id}`,
+                        section: '문서 열기',
+                        icon: TEMPLATES[d.templateId].icon,
+                        label: d.data.title || '(제목 없음)',
+                        hint: TEMPLATES[d.templateId].name,
+                        action: () => dispatch({ type: actions.SELECT, payload: { id: d.id } })
+                    });
+                });
+                cmds.push(
+                    { id: 'export-pdf', section: '액션', icon: '📄', label: 'PDF 내보내기', action: exportToPDF },
+                    { id: 'export-md', section: '액션', icon: '📝', label: 'Markdown 내보내기', action: exportMD },
+                    { id: 'export-txt', section: '액션', icon: '📋', label: 'TXT 내보내기', action: exportTXT },
+                    { id: 'export-json', section: '액션', icon: '📦', label: 'JSON 백업 내보내기', action: exportJSON },
+                    { id: 'import-json', section: '액션', icon: '📥', label: 'JSON 가져오기', action: () => fileInputRef.current?.click() },
+                    { id: 'save', section: '액션', icon: '💾', label: '저장', shortcut: '⌘S', action: () => { setSavedDocs(state.documents); setToast('💾 저장 완료'); } },
+                    { id: 'print', section: '액션', icon: '🖨️', label: '인쇄', shortcut: '⌘P', action: () => window.print() }
+                );
+                if (currentDoc) {
+                    cmds.push(
+                        { id: 'duplicate', section: '액션', icon: '📑', label: '현재 문서 복제', action: () => duplicateDocument(currentDoc.id) },
+                        { id: 'pin', section: '액션', icon: currentDoc.pinned ? '📌' : '⭐', label: currentDoc.pinned ? '핀 해제' : '핀 고정', action: () => togglePin(currentDoc.id) },
+                        { id: 'delete', section: '액션', icon: '🗑️', label: '현재 문서 삭제', action: () => deleteDocument(currentDoc.id) }
+                    );
+                }
+                THEMES.forEach(t => {
+                    cmds.push({
+                        id: `theme-${t}`,
+                        section: '테마',
+                        icon: '🎨',
+                        label: `테마: ${t.toUpperCase()}`,
+                        action: () => setSettings(s => ({ ...s, theme: t }))
+                    });
+                });
+                WATERMARKS.forEach(w => {
+                    cmds.push({
+                        id: `wm-${w}`,
+                        section: '워터마크',
+                        icon: '🏷️',
+                        label: `워터마크: ${w}`,
+                        action: () => setSettings(s => ({ ...s, watermark: w }))
+                    });
+                });
+                return cmds;
+            }, [state.documents, currentDoc, exportToPDF, exportMD, exportTXT, exportJSON, createNewDocument, duplicateDocument, deleteDocument, togglePin, setSettings, setSavedDocs]);
 
             if (!currentDoc) {
                 return (
@@ -691,429 +1458,257 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 );
             }
 
+            const isCollapsed = settings.sidebarCollapsed;
+
             return (
                 <div className="flex h-screen w-full overflow-hidden grid-bg">
-                    {/* 사이드바 */}
-                    <aside className={`${sidebarCollapsed ? 'w-16' : 'w-[420px]'} bg-[#0a0e14] border-r border-[#22d3ee]/20 flex flex-col transition-all duration-300 no-print`}>
-                        <div className="p-6 border-b border-[#22d3ee]/20">
-                            <div className="flex items-center justify-between mb-6">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="application/json"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) importJSON(f);
+                            e.target.value = '';
+                        }}
+                    />
+
+                    <aside
+                        className="bg-[#0a0e14] border-r flex flex-col transition-all duration-300 no-print"
+                        style={{
+                            width: isCollapsed ? '60px' : '420px',
+                            borderColor: 'var(--accent-border)'
+                        }}
+                    >
+                        <div className="p-5 border-b" style={{ borderColor: 'var(--accent-border)' }}>
+                            <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-3 h-3 rounded-full bg-[#22d3ee] shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
-                                    {!sidebarCollapsed && (
+                                    <div className="w-3 h-3 rounded-full status-indicator" style={{ background: 'var(--accent)' }} />
+                                    {!isCollapsed && (
                                         <div>
-                                            <h1 className="font-black text-[#22d3ee] tracking-tight display text-lg">PRODOC</h1>
-                                            <p className="text-[9px] text-gray-500 mono">Enterprise v2.1</p>
+                                            <h1 className="font-black tracking-tight display text-lg" style={{ color: 'var(--accent)' }}>PRODOC</h1>
+                                            <p className="text-[9px] text-gray-500 mono">Enterprise v3.0</p>
                                         </div>
                                     )}
                                 </div>
                                 <button
-                                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                                    className="text-gray-400 hover:text-[#22d3ee] transition-colors"
+                                    onClick={() => setSettings(s => ({ ...s, sidebarCollapsed: !s.sidebarCollapsed }))}
+                                    className="text-gray-400 hover:text-white transition-colors text-lg"
                                 >
-                                    {sidebarCollapsed ? '→' : '←'}
+                                    {isCollapsed ? '→' : '←'}
                                 </button>
                             </div>
-                            {!sidebarCollapsed && (
-                                <select
-                                    className="w-full bg-[#151b24] border border-[#22d3ee]/30 rounded-lg p-2.5 text-xs text-gray-200 focus:border-[#22d3ee] outline-none mono"
-                                    onChange={(e) => createNewDocument(e.target.value)}
-                                    value=""
+                            {!isCollapsed && (
+                                <button
+                                    onClick={() => setPaletteOpen(true)}
+                                    className="w-full bg-[#151b24] hover:bg-[#1f2937] text-gray-400 hover:text-gray-200 rounded-lg px-3 py-2 text-xs mono flex items-center justify-between transition-all"
+                                    style={{ border: '1px solid var(--accent-border)' }}
                                 >
-                                    <option value="" disabled>+ 새 문서 생성</option>
-                                    {Object.entries(TEMPLATES).map(([key, tmpl]) => (
-                                        <option key={key} value={key}>
-                                            {tmpl.icon} {tmpl.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                    <span className="flex items-center gap-2">
+                                        <span>🔍</span>
+                                        <span>명령 검색...</span>
+                                    </span>
+                                    <span className="kbd">⌘K</span>
+                                </button>
                             )}
                         </div>
 
-                        {!sidebarCollapsed && (
+                        {!isCollapsed && (
                             <>
-                                {/* 문서 목록 */}
-                                <div className="px-4 py-3 border-b border-[#22d3ee]/20">
-                                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-2 mono">
-                                        문서 목록 ({state.documents.length})
-                                    </p>
-                                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                                        {state.documents.map((doc) => (
+                                <div className="px-4 pt-3 pb-2">
+                                    <input
+                                        className="w-full bg-[#151b24] rounded-lg px-3 py-2 text-xs text-gray-200 mono outline-none"
+                                        style={{ border: '1px solid var(--accent-border)' }}
+                                        placeholder="🔎 문서 검색..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onFocus={(e) => e.target.style.borderColor = 'var(--accent)'}
+                                        onBlur={(e) => e.target.style.borderColor = 'var(--accent-border)'}
+                                    />
+                                </div>
+
+                                <div className="px-4 pb-2 flex items-center gap-1 flex-wrap">
+                                    {[
+                                        { k: 'all', label: '전체' },
+                                        { k: 'pinned', label: '★ 핀' },
+                                        { k: 'business', label: '비즈니스' },
+                                        { k: 'securities', label: '증권' }
+                                    ].map(t => (
+                                        <button
+                                            key={t.k}
+                                            className={`tab-btn ${settings.filterTab === t.k ? 'active' : ''}`}
+                                            onClick={() => setSettings(s => ({ ...s, filterTab: t.k }))}
+                                        >{t.label}</button>
+                                    ))}
+                                </div>
+
+                                <div className="px-3 pb-2 border-b" style={{ borderColor: 'var(--accent-border)' }}>
+                                    <div className="flex items-center justify-between px-2 mb-1">
+                                        <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mono">
+                                            문서 ({visibleDocs.length}/{state.documents.length})
+                                        </p>
+                                        <select
+                                            className="bg-transparent text-[9px] text-gray-500 mono outline-none cursor-pointer"
+                                            value={settings.sortBy}
+                                            onChange={(e) => setSettings(s => ({ ...s, sortBy: e.target.value }))}
+                                        >
+                                            <option value="recent" style={{ background: '#151b24' }}>최근 수정순</option>
+                                            <option value="name" style={{ background: '#151b24' }}>이름순</option>
+                                            <option value="created" style={{ background: '#151b24' }}>생성일순</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1 max-h-[180px] overflow-y-auto">
+                                        {visibleDocs.length === 0 && (
+                                            <div className="text-center py-4 text-[10px] text-gray-500 mono">매칭되는 문서 없음</div>
+                                        )}
+                                        {visibleDocs.map((doc) => (
                                             <div
                                                 key={doc.id}
-                                                className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all ${
-                                                    doc.id === currentDoc.id
-                                                        ? 'bg-[#22d3ee]/10 border border-[#22d3ee]/30'
-                                                        : 'hover:bg-[#151b24]'
-                                                }`}
-                                                onClick={() => dispatch({ type: actionTypes.SELECT_DOCUMENT, payload: { id: doc.id } })}
+                                                className="group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all"
+                                                style={{
+                                                    background: doc.id === currentDoc.id ? 'var(--accent-soft)' : 'transparent',
+                                                    border: doc.id === currentDoc.id ? '1px solid var(--accent-border)' : '1px solid transparent'
+                                                }}
+                                                onClick={() => dispatch({ type: actions.SELECT, payload: { id: doc.id } })}
+                                                onMouseEnter={(e) => { if (doc.id !== currentDoc.id) e.currentTarget.style.background = '#151b24'; }}
+                                                onMouseLeave={(e) => { if (doc.id !== currentDoc.id) e.currentTarget.style.background = 'transparent'; }}
                                             >
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm">{TEMPLATES[doc.templateId].icon}</span>
-                                                    <div>
-                                                        <p className="text-xs text-gray-200 mono truncate max-w-[200px]">
-                                                            {doc.data.title}
-                                                        </p>
-                                                        <p className="text-[9px] text-gray-500 mono">
-                                                            {new Date(doc.updatedAt).toLocaleDateString('ko-KR')}
-                                                        </p>
-                                                    </div>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); togglePin(doc.id); }}
+                                                    className="star-btn text-sm"
+                                                    style={{ color: doc.pinned ? 'var(--accent)' : '#374151', background: 'none', border: 'none' }}
+                                                    title={doc.pinned ? '핀 해제' : '핀 고정'}
+                                                >★</button>
+                                                <span className="text-base">{TEMPLATES[doc.templateId].icon}</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs text-gray-200 mono truncate">{doc.data.title}</p>
+                                                    <p className="text-[9px] text-gray-500 mono">
+                                                        {TEMPLATES[doc.templateId].name} · {new Date(doc.updatedAt).toLocaleDateString('ko-KR')}
+                                                    </p>
                                                 </div>
-                                                {state.documents.length > 1 && (
+                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                                     <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            deleteDocument(doc.id);
-                                                        }}
-                                                        className="text-gray-500 hover:text-red-400 text-xs"
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                )}
+                                                        onClick={(e) => { e.stopPropagation(); duplicateDocument(doc.id); }}
+                                                        className="text-gray-500 hover:text-gray-200 text-xs"
+                                                        title="복제"
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                                                    >⎘</button>
+                                                    {state.documents.length > 1 && (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); deleteDocument(doc.id); }}
+                                                            className="text-gray-500 hover:text-red-400 text-xs"
+                                                            title="삭제"
+                                                            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                                                        >✕</button>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* 편집 필드 */}
-                                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                                    <div className="gradient-border rounded-lg p-4 mb-4">
-                                        <p className="text-[10px] text-[#22d3ee] font-bold mono mb-2">
-                                            📋 {currentTemplate?.name}
+                                <div className="flex-1 overflow-y-auto p-4">
+                                    <div className="gradient-border rounded-lg p-3 mb-4">
+                                        <p className="text-[10px] font-bold mono mb-1" style={{ color: 'var(--accent)' }}>
+                                            {currentTemplate?.icon} {currentTemplate?.name}
                                         </p>
-                                        <p className="text-[9px] text-gray-500 mono">
-                                            {currentTemplate?.category.toUpperCase()}
+                                        <p className="text-[9px] text-gray-500 mono uppercase tracking-wider">
+                                            {currentTemplate?.category}
                                         </p>
                                     </div>
 
                                     {currentTemplate?.isSecurities ? (
-                                        /* 증권 보고서 전용 필드 */
                                         <>
                                             <FieldInput label="기업명" value={currentDoc.data.company || ''} onChange={(v) => updateField('company', v)} placeholder="예: 삼성전자" />
-                                            <FieldInput label="리포트 제목" value={currentDoc.data.title || ''} onChange={(v) => updateField('title', v)} placeholder="예: AI 반도체 슈퍼사이클 진입" />
-                                            <div className="grid grid-cols-2 gap-3">
+                                            <FieldInput label="리포트 제목" value={currentDoc.data.title || ''} onChange={(v) => updateField('title', v)} />
+                                            <div className="grid grid-cols-2 gap-2">
                                                 <FieldInput label="투자의견" value={currentDoc.data.rating || ''} onChange={(v) => updateField('rating', v)} placeholder="BUY/HOLD/SELL" />
-                                                <FieldInput label="목표주가" value={currentDoc.data.target_price || ''} onChange={(v) => updateField('target_price', v)} placeholder="85,000" />
+                                                <FieldInput label="목표주가" value={currentDoc.data.target_price || ''} onChange={(v) => updateField('target_price', v)} />
                                             </div>
-                                            <FieldInput label="현재주가" value={currentDoc.data.current_price || ''} onChange={(v) => updateField('current_price', v)} placeholder="68,500" />
-                                            <FieldInput label="분석 내용" type="textarea" value={currentDoc.data.content || ''} onChange={(v) => updateField('content', v)} placeholder="투자 의견, 재무 분석, 리스크 요인 등을 작성하세요..." />
-                                            <FieldInput label="애널리스트" value={currentDoc.data.author || ''} onChange={(v) => updateField('author', v)} placeholder="예: 임채훈 수석 애널리스트" />
+                                            <FieldInput label="현재주가" value={currentDoc.data.current_price || ''} onChange={(v) => updateField('current_price', v)} />
+                                            <FieldInput label="분석 내용 (Markdown)" type="textarea" value={currentDoc.data.content || ''} onChange={(v) => updateField('content', v)} />
+                                            <FieldInput label="애널리스트" value={currentDoc.data.author || ''} onChange={(v) => updateField('author', v)} />
                                         </>
                                     ) : (
-                                        /* 일반 문서 필드 */
                                         <>
-                                            <FieldInput label="조직/기관명" value={currentDoc.data.organization || ''} onChange={(v) => updateField('organization', v)} placeholder="예: 한국기술교육원" />
-                                            <FieldInput label="수신자" value={currentDoc.data.recipient || ''} onChange={(v) => updateField('recipient', v)} placeholder="예: 홍길동 책임연구원" />
-                                            <FieldInput label="문서 제목" value={currentDoc.data.title || ''} onChange={(v) => updateField('title', v)} placeholder="예: 2025년 상반기 교육과정 안내" />
-                                            <FieldInput label="본문 내용" type="textarea" value={currentDoc.data.content || ''} onChange={(v) => updateField('content', v)} placeholder="본문 내용을 입력하세요..." />
-                                            <FieldInput label="발신자 (서명)" value={currentDoc.data.author || ''} onChange={(v) => updateField('author', v)} placeholder="예: 임채훈 원장" />
+                                            <FieldInput label="조직/기관명" value={currentDoc.data.organization || ''} onChange={(v) => updateField('organization', v)} />
+                                            <FieldInput label="수신자" value={currentDoc.data.recipient || ''} onChange={(v) => updateField('recipient', v)} />
+                                            <FieldInput label="문서 제목" value={currentDoc.data.title || ''} onChange={(v) => updateField('title', v)} />
+                                            <FieldInput label="본문 (Markdown 지원)" type="textarea" value={currentDoc.data.content || ''} onChange={(v) => updateField('content', v)} />
+                                            <FieldInput label="발신자 (서명)" value={currentDoc.data.author || ''} onChange={(v) => updateField('author', v)} />
                                         </>
                                     )}
-                                </div>
-
-                                {/* 액션 버튼 */}
-                                <div className="p-6 border-t border-[#22d3ee]/20 space-y-2">
-                                    <button
-                                        onClick={exportToPDF}
-                                        className="w-full bg-gradient-to-r from-[#22d3ee] to-[#06b6d4] hover:from-[#06b6d4] hover:to-[#0891b2] text-[#0a0e14] font-bold py-3 px-4 rounded-lg transition-all transform active:scale-[0.98] neo-glow mono text-sm"
-                                    >
-                                        📄 PDF 내보내기 (Library)
-                                    </button>
-                                    <button
-                                        onClick={() => window.print()}
-                                        className="w-full bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-2 px-4 rounded-lg border border-[#22d3ee]/30 transition-all mono text-xs"
-                                    >
-                                        🖨️ 인쇄 / PDF 저장 (Ctrl+P)
-                                    </button>
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button
-                                            onClick={() => {
-                                                const dataStr = JSON.stringify(currentDoc.data, null, 2);
-                                                const blob = new Blob([dataStr], { type: 'application/json' });
-                                                const url = URL.createObjectURL(blob);
-                                                const a = document.createElement('a');
-                                                a.href = url;
-                                                a.download = `${currentDoc.data.title || 'document'}.json`;
-                                                a.click();
-                                                setToast('📦 JSON 내보내기 완료');
-                                            }}
-                                            className="bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-2 px-3 rounded-lg border border-[#22d3ee]/30 transition-all mono text-xs"
-                                        >
-                                            📦 JSON
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                const textContent = `${currentDoc.data.title}\n\n${currentDoc.data.content}`;
-                                                const blob = new Blob([textContent], { type: 'text/plain' });
-                                                const url = URL.createObjectURL(blob);
-                                                const a = document.createElement('a');
-                                                a.href = url;
-                                                a.download = `${currentDoc.data.title || 'document'}.txt`;
-                                                a.click();
-                                                setToast('📝 TXT 내보내기 완료');
-                                            }}
-                                            className="bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-2 px-3 rounded-lg border border-[#22d3ee]/30 transition-all mono text-xs"
-                                        >
-                                            📝 TXT
-                                        </button>
-                                    </div>
-
-                                    <button
-                                        onClick={() => {
-                                            setSavedDocs(state.documents);
-                                            setToast('💾 모든 문서 저장 완료');
-                                        }}
-                                        className="w-full bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-3 px-4 rounded-lg border border-[#22d3ee]/30 transition-all mono text-sm"
-                                    >
-                                        💾 저장 (Ctrl+S)
-                                    </button>
-
-                                    {/* Quick Templates */}
-                                    <div className="border-t border-[#22d3ee]/20 pt-3 mt-3">
-                                        <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-2 mono">Quick Templates</p>
-                                        <div className="grid grid-cols-4 gap-1">
-                                            {Object.entries(TEMPLATES).slice(0, 8).map(([key, tmpl]) => (
-                                                <button
-                                                    key={key}
-                                                    onClick={() => createNewDocument(key)}
-                                                    className="aspect-square flex flex-col items-center justify-center bg-[#0a0e14] hover:bg-[#151b24] border border-[#22d3ee]/20 hover:border-[#22d3ee]/50 rounded transition-all"
-                                                    title={tmpl.name}
-                                                >
-                                                    <span className="text-lg">{tmpl.icon}</span>
-                                                    <span className="text-[8px] text-gray-500 mt-1 mono truncate max-w-full px-1">
-                                                        {tmpl.name.split(' ')[0]}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
                                 </div>
                             </>
                         )}
                     </aside>
 
-                    {/* 메인 프리뷰 */}
-                    <main className="flex-1 bg-[#0d1117] overflow-y-auto flex flex-col print-area">
-                        <div ref={printRef} className="flex-1 flex justify-center items-start p-12">
-                            {currentTemplate?.isSecurities ? (
-                                /* 한화투자증권 스타일 */
-                                <section className="document-canvas shadow-2xl">
-                                    <div className="bg-gradient-to-r from-red-700 to-red-600 px-12 py-8">
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <h1 className="text-4xl font-black text-white display tracking-tight">한화투자증권</h1>
-                                                <p className="text-red-100 text-sm mt-1 mono font-semibold">HANWHA INVESTMENT & SECURITIES</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-white text-xs font-bold mono">Research Center</p>
-                                                <p className="text-red-100 text-[10px] mono">{new Date().toLocaleDateString('ko-KR')}</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                    <main className="flex-1 bg-[#0d1117] overflow-hidden flex flex-col print-area">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-[#0a0e14] border-b no-print" style={{ borderColor: 'var(--accent-border)' }}>
+                            <button className="tool-btn primary" onClick={exportToPDF}>📄 PDF</button>
+                            <button className="tool-btn" onClick={() => window.print()}>🖨️ Print</button>
+                            <button className="tool-btn" onClick={exportMD}>📝 MD</button>
+                            <button className="tool-btn" onClick={exportTXT}>📋 TXT</button>
+                            <button className="tool-btn" onClick={exportJSON}>📦 JSON</button>
+                            <button className="tool-btn" onClick={() => fileInputRef.current?.click()}>📥 Import</button>
 
-                                    <div className="bg-gray-50 border-b-4 border-red-600 px-12 py-6">
-                                        <div className="flex justify-between items-end">
-                                            <div>
-                                                <h2 className="text-3xl font-black text-gray-900 mb-1">{currentDoc.data.company || '기업명'}</h2>
-                                                <p className="text-gray-600 text-sm font-semibold">{currentDoc.data.title}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="bg-red-600 text-white px-6 py-2 rounded-lg inline-block">
-                                                    <p className="text-xs font-bold">투자의견</p>
-                                                    <p className="text-2xl font-black">{currentDoc.data.rating || 'BUY'}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div className="flex-1" />
 
-                                    <div className="px-12 py-6 bg-white border-b border-gray-200">
-                                        <div className="grid grid-cols-4 gap-6">
-                                            <div className="border-l-4 border-red-600 pl-4">
-                                                <p className="text-xs text-gray-500 font-semibold mb-1">목표주가</p>
-                                                <p className="text-2xl font-black text-red-600">{currentDoc.data.target_price || '85,000'}원</p>
-                                            </div>
-                                            <div className="border-l-4 border-gray-300 pl-4">
-                                                <p className="text-xs text-gray-500 font-semibold mb-1">현재주가</p>
-                                                <p className="text-2xl font-black text-gray-700">{currentDoc.data.current_price || '68,500'}원</p>
-                                            </div>
-                                            <div className="border-l-4 border-blue-600 pl-4">
-                                                <p className="text-xs text-gray-500 font-semibold mb-1">상승여력</p>
-                                                <p className="text-2xl font-black text-blue-600">+24.1%</p>
-                                            </div>
-                                            <div className="border-l-4 border-gray-300 pl-4">
-                                                <p className="text-xs text-gray-500 font-semibold mb-1">시가총액</p>
-                                                <p className="text-2xl font-black text-gray-700">8.5조원</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <select
+                                className="tool-btn"
+                                value={settings.watermark}
+                                onChange={(e) => setSettings(s => ({ ...s, watermark: e.target.value }))}
+                                title="워터마크"
+                            >
+                                {WATERMARKS.map(w => (
+                                    <option key={w} value={w} style={{ background: '#151b24' }}>🏷️ {w}</option>
+                                ))}
+                            </select>
 
-                                    <article className="px-12 py-8">
-                                        <div className="prose max-w-none">
-                                            <div className="text-gray-800 leading-relaxed text-[15px]" style={{ fontFamily: "'Crimson Pro', serif" }}>
-                                                <SecuritiesContentRenderer content={currentDoc.data.content} />
-                                            </div>
-                                        </div>
-                                    </article>
+                            <div className="flex items-center gap-1 tool-btn" style={{ padding: '4px 8px' }}>
+                                <button
+                                    onClick={() => setSettings(s => ({ ...s, zoom: Math.max(0.4, s.zoom - 0.1) }))}
+                                    style={{ padding: '0 6px', background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}
+                                >−</button>
+                                <span className="text-[11px] mono w-10 text-center">{Math.round(settings.zoom * 100)}%</span>
+                                <button
+                                    onClick={() => setSettings(s => ({ ...s, zoom: Math.min(2, s.zoom + 0.1) }))}
+                                    style={{ padding: '0 6px', background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}
+                                >+</button>
+                            </div>
 
-                                    <div className="px-12 py-6 bg-gray-50 border-t-2 border-gray-200">
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <p className="text-xs text-gray-500 mb-1">애널리스트</p>
-                                                <p className="text-lg font-bold text-gray-900">{currentDoc.data.author}</p>
-                                                <p className="text-xs text-gray-600 mono">research@hanwhawm.com</p>
-                                            </div>
-                                            <div className="text-right text-[10px] text-gray-500 mono">
-                                                <p>Report ID: {currentDoc.id.substring(0, 8).toUpperCase()}</p>
-                                                <p>Published: {new Date().toISOString()}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <footer className="px-12 py-6 bg-gray-100 border-t border-gray-300">
-                                        <p className="text-[9px] text-gray-600 leading-relaxed">
-                                            본 자료는 고객의 증권투자를 돕기 위해 작성된 참고자료이며, 어떠한 경우에도 법적 책임소재에 대한 증빙자료로 사용될 수 없습니다.
-                                            본 자료는 당사의 저작물로서 모든 저작권은 당사에게 있으며, 어떠한 경우에도 당사의 동의 없이 복제, 배포, 전송, 기타 저작권 침해행위를 할 수 없습니다.
-                                            투자자는 금융투자상품에 대하여 당사로부터 충분한 설명을 받을 권리가 있으며, 투자 전 상품설명서 및 약관을 반드시 읽어보시기 바랍니다.
-                                        </p>
-                                        <div className="flex justify-between items-center mt-4 text-[10px] text-gray-500 font-bold">
-                                            <span>한화투자증권 리서치센터</span>
-                                            <span>Tel: 02-3772-7700</span>
-                                        </div>
-                                    </footer>
-                                </section>
-                            ) : (
-                                /* 일반 공문서 스타일 (인장 위치 개선) */
-                                <section className="document-canvas shadow-2xl">
-                                    {/* 문서 헤더 */}
-                                    <div className="border-b-2 border-gray-800 pb-8 mb-8 px-12 pt-12">
-                                        <div className="text-center mb-8">
-                                            <h2 className="text-5xl font-black tracking-tight display mb-2">{currentDoc.data.organization}</h2>
-                                            <div className="h-1 w-32 bg-blue-600 mx-auto mb-4"></div>
-                                            <code className="text-xs font-bold text-gray-600 mono tracking-wider uppercase">
-                                                {currentTemplate?.category} Document
-                                            </code>
-                                        </div>
-                                        <div className="border border-gray-300 rounded p-4 bg-gray-50 grid grid-cols-2 gap-3 text-xs mono">
-                                            <div className="flex justify-between border-b border-gray-200 pb-2">
-                                                <span className="font-bold text-gray-600">문서번호:</span>
-                                                <span className="text-gray-800">{currentTemplate?.id}-{currentDoc.id.substring(0, 6)}</span>
-                                            </div>
-                                            <div className="flex justify-between border-b border-gray-200 pb-2">
-                                                <span className="font-bold text-gray-600">시행일자:</span>
-                                                <span className="text-gray-800">{new Date().toLocaleDateString('ko-KR')}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="font-bold text-gray-600">보존기간:</span>
-                                                <span className="text-gray-800">영구</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="font-bold text-gray-600">문서종류:</span>
-                                                <span className="text-gray-800">{currentTemplate?.name}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* 수신/발신 정보 */}
-                                    <div className="px-12 mb-10">
-                                        <table className="w-full border-2 border-gray-800 text-sm">
-                                            <tbody>
-                                                <tr className="border-b border-gray-800">
-                                                    <td className="font-bold bg-gray-100 px-6 py-4 w-24 text-gray-700 border-r-2 border-gray-800">수신</td>
-                                                    <td className="px-6 py-4 font-semibold text-lg">{currentDoc.data.recipient}</td>
-                                                </tr>
-                                                <tr className="border-b border-gray-800">
-                                                    <td className="font-bold bg-gray-100 px-6 py-4 text-gray-700 border-r-2 border-gray-800">발신</td>
-                                                    <td className="px-6 py-4">{currentDoc.data.organization}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="font-bold bg-gray-100 px-6 py-4 text-gray-700 border-r-2 border-gray-800">제목</td>
-                                                    <td className="px-6 py-4 font-bold text-base">{currentDoc.data.title}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {/* 본문 */}
-                                    <article className="px-12 mb-16">
-                                        <div className="border-2 border-gray-300 rounded-lg p-8 bg-white min-h-[400px]">
-                                            <div className="text-gray-800 leading-loose whitespace-pre-wrap text-base">
-                                                {currentDoc.data.content}
-                                            </div>
-                                        </div>
-                                    </article>
-
-                                    {/* 결재란 + 인장 (위치 개선) */}
-                                    <div className="px-12 mb-12">
-                                        <div className="border-2 border-gray-800">
-                                            <div className="grid grid-cols-4 text-center">
-                                                <div className="border-r-2 border-gray-800 py-3 bg-gray-100">
-                                                    <p className="text-xs font-bold text-gray-600">담당</p>
-                                                </div>
-                                                <div className="border-r-2 border-gray-800 py-3 bg-gray-100">
-                                                    <p className="text-xs font-bold text-gray-600">검토</p>
-                                                </div>
-                                                <div className="border-r-2 border-gray-800 py-3 bg-gray-100">
-                                                    <p className="text-xs font-bold text-gray-600">승인</p>
-                                                </div>
-                                                <div className="py-3 bg-gray-100">
-                                                    <p className="text-xs font-bold text-gray-600">발신</p>
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-4 text-center border-t-2 border-gray-800">
-                                                <div className="border-r-2 border-gray-800 py-12"></div>
-                                                <div className="border-r-2 border-gray-800 py-12"></div>
-                                                <div className="border-r-2 border-gray-800 py-12"></div>
-                                                {/* 인장 위치 개선: 결재란 내부 중앙 정렬 */}
-                                                <div className="py-12 flex items-center justify-center relative">
-                                                    <canvas
-                                                        ref={canvasRef}
-                                                        width="200"
-                                                        height="200"
-                                                        className="w-28 h-28 opacity-95"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* 발신자 정보 */}
-                                    <div className="px-12 mb-16 text-right">
-                                        <div className="inline-block text-left">
-                                            <p className="text-sm text-gray-600 mb-2">발신자</p>
-                                            <div className="border-b-2 border-gray-800 pb-2 px-4">
-                                                <p className="text-2xl font-bold tracking-tight">{currentDoc.data.author}</p>
-                                            </div>
-                                            <p className="text-xs text-gray-500 mt-1 text-right">(인)</p>
-                                        </div>
-                                    </div>
-
-                                    {/* 푸터 */}
-                                    <footer className="absolute bottom-6 left-0 right-0 px-12">
-                                        <div className="border-t-2 border-gray-300 pt-4">
-                                            <div className="grid grid-cols-3 gap-4 text-[10px] text-gray-500 mono">
-                                                <div>
-                                                    <p className="font-bold mb-1">문서검증번호</p>
-                                                    <p>{currentDoc.id.substring(0, 16).toUpperCase()}</p>
-                                                </div>
-                                                <div className="text-center">
-                                                    <p className="font-bold mb-1">발행시스템</p>
-                                                    <p>ProDoc Enterprise v2.1</p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="font-bold mb-1">발행일시</p>
-                                                    <p>{new Date().toLocaleString('ko-KR')}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="text-center text-[9px] text-gray-400 mt-3 mono">
-                                            <p>이 문서는 전자문서 및 전자거래 기본법에 따라 법적 효력을 가집니다.</p>
-                                        </div>
-                                    </footer>
-                                </section>
-                            )}
+                            <button className="tool-btn" onClick={() => setPaletteOpen(true)} title="명령 팔레트">
+                                ⌘K
+                            </button>
                         </div>
-                        <StatusBar status="saved" lastSaved={state.lastSaved} />
+
+                        <div className="flex-1 overflow-auto flex justify-center items-start p-8" style={{ background: '#0d1117' }}>
+                            <div className="doc-zoom-wrap" style={{ transform: `scale(${settings.zoom})` }}>
+                                <div ref={printRef}>
+                                    {currentTemplate?.isSecurities ? (
+                                        <SecuritiesDocument doc={currentDoc} watermark={settings.watermark} />
+                                    ) : (
+                                        <GeneralDocument doc={currentDoc} template={currentTemplate} canvasRef={canvasRef} watermark={settings.watermark} />
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <StatusBar
+                            stats={stats}
+                            lastSaved={state.lastSaved}
+                            zoom={settings.zoom}
+                            theme={settings.theme}
+                            onThemeChange={(t) => setSettings(s => ({ ...s, theme: t }))}
+                        />
                     </main>
+
+                    <CommandPalette
+                        open={paletteOpen}
+                        onClose={() => setPaletteOpen(false)}
+                        commands={commands}
+                    />
 
                     {toast && <Toast message={toast} onClose={() => setToast(null)} />}
                 </div>
