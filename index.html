@@ -12,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Archivo+Black&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         @page { size: A4; margin: 0; }
         @media print {
@@ -95,6 +96,64 @@
                 linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
             background-size: 20px 20px;
+        }
+
+        /* ═══ Markdown Body Styling ═══ */
+        .md-body { font-family: 'Crimson Pro', serif; color: #1f2937; line-height: 1.85; font-size: 15px; }
+        .md-body h1 { font-family: 'Archivo Black', sans-serif; font-size: 28px; margin: 24px 0 12px; color: #0f172a; border-bottom: 3px solid #1e40af; padding-bottom: 8px; letter-spacing: -0.02em; }
+        .md-body h2 { font-family: 'Archivo Black', sans-serif; font-size: 22px; margin: 22px 0 10px; color: #1e3a8a; border-left: 5px solid #1e40af; padding-left: 12px; letter-spacing: -0.01em; }
+        .md-body h3 { font-weight: 800; font-size: 17px; margin: 18px 0 8px; color: #1e3a8a; }
+        .md-body h4 { font-weight: 700; font-size: 15px; margin: 14px 0 6px; color: #334155; }
+        .md-body p { margin: 8px 0; }
+        .md-body strong { font-weight: 700; color: #0f172a; }
+        .md-body em { font-style: italic; color: #475569; }
+        .md-body ul, .md-body ol { margin: 10px 0 10px 24px; }
+        .md-body li { margin: 4px 0; padding-left: 4px; }
+        .md-body ul li { list-style: none; position: relative; }
+        .md-body ul li::before { content: "▸"; position: absolute; left: -18px; color: #1e40af; font-weight: bold; }
+        .md-body ol { list-style: decimal; }
+        .md-body ol li::marker { color: #1e40af; font-weight: 700; }
+        .md-body code.inline { background: #f1f5f9; color: #be123c; padding: 2px 8px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 13px; border: 1px solid #e2e8f0; }
+        .md-body pre.block { background: #0f172a; color: #e2e8f0; padding: 16px 20px; border-radius: 8px; overflow-x: auto; margin: 14px 0; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.6; border-left: 4px solid #22d3ee; }
+        .md-body blockquote { border-left: 4px solid #94a3b8; padding: 8px 16px; margin: 12px 0; background: #f8fafc; color: #475569; font-style: italic; }
+        .md-body hr { border: none; border-top: 2px dashed #cbd5e1; margin: 20px 0; }
+        .md-body .checkbox-checked { color: #16a34a; font-weight: bold; margin-right: 6px; }
+        .md-body .checkbox-unchecked { color: #cbd5e1; margin-right: 6px; }
+        .md-body table.md-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+        .md-body table.md-table th { background: #1e40af; color: white; padding: 10px; text-align: left; font-weight: 700; }
+        .md-body table.md-table td { border: 1px solid #e2e8f0; padding: 8px 10px; }
+        .md-body table.md-table tr:nth-child(even) td { background: #f8fafc; }
+
+        /* ═══ Watermark ═══ */
+        .watermark-wrap { position: relative; }
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 140px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            pointer-events: none;
+            user-select: none;
+            opacity: 0.10;
+            white-space: nowrap;
+            z-index: 100;
+            text-shadow: 0 0 4px currentColor;
+        }
+        .watermark.wm-draft       { color: #f59e0b; }
+        .watermark.wm-confidential{ color: #dc2626; opacity: 0.13; font-size: 110px; }
+        .watermark.wm-approved    { color: #16a34a; }
+        .watermark.wm-copy        { color: #6b7280; }
+        .watermark.wm-final       { color: #1e40af; }
+
+        /* ═══ QR Code container ═══ */
+        .qr-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .qr-block img, .qr-block canvas { width: 64px; height: 64px; border: 1px solid #e5e7eb; padding: 2px; background: white; border-radius: 4px; }
+
+        @media print {
+            .watermark { opacity: 0.12 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -314,6 +373,205 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
         };
 
         /**
+         * Inline 마크다운 파서: **bold**, *italic*, `code`
+         */
+        const renderInline = (text, keyPrefix = '') => {
+            if (!text) return null;
+            const tokens = [];
+            let remaining = text;
+            let key = 0;
+            const pattern = /(\*\*([^*]+?)\*\*)|(`([^`]+?)`)|(\*([^*]+?)\*)/;
+            while (remaining.length > 0) {
+                const m = remaining.match(pattern);
+                if (!m) { tokens.push(remaining); break; }
+                if (m.index > 0) tokens.push(remaining.slice(0, m.index));
+                if (m[1]) tokens.push(<strong key={`${keyPrefix}-b-${key++}`}>{m[2]}</strong>);
+                else if (m[3]) tokens.push(<code key={`${keyPrefix}-c-${key++}`} className="inline">{m[4]}</code>);
+                else if (m[5]) tokens.push(<em key={`${keyPrefix}-i-${key++}`}>{m[6]}</em>);
+                remaining = remaining.slice(m.index + m[0].length);
+            }
+            return tokens;
+        };
+
+        /**
+         * 일반 문서용 마크다운 렌더러 - 헤더/리스트/코드블록/체크박스/인용 등 지원
+         */
+        const MarkdownRenderer = ({ content }) => {
+            if (!content) return null;
+            const lines = content.split('\n');
+            const blocks = [];
+            let i = 0;
+            let key = 0;
+
+            while (i < lines.length) {
+                const line = lines[i];
+                const trimmed = line.trim();
+
+                // 코드블록
+                if (trimmed.startsWith('```')) {
+                    const lang = trimmed.slice(3).trim();
+                    const codeLines = [];
+                    i++;
+                    while (i < lines.length && !lines[i].trim().startsWith('```')) {
+                        codeLines.push(lines[i]);
+                        i++;
+                    }
+                    i++; // closing ```
+                    blocks.push(
+                        <pre key={`pre-${key++}`} className="block">
+                            {lang && <div style={{color:'#22d3ee', fontSize:'10px', marginBottom:'8px', letterSpacing:'0.1em'}}>▸ {lang.toUpperCase()}</div>}
+                            <code>{codeLines.join('\n')}</code>
+                        </pre>
+                    );
+                    continue;
+                }
+
+                // 빈 줄
+                if (trimmed === '') { i++; continue; }
+
+                // 헤더
+                if (/^#{1,6}\s/.test(trimmed)) {
+                    const level = trimmed.match(/^(#+)/)[1].length;
+                    const text = trimmed.replace(/^#+\s+/, '');
+                    const Tag = `h${Math.min(level, 4)}`;
+                    blocks.push(<Tag key={`h-${key++}`}>{renderInline(text, `h${key}`)}</Tag>);
+                    i++;
+                    continue;
+                }
+
+                // 수평선
+                if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
+                    blocks.push(<hr key={`hr-${key++}`} />);
+                    i++;
+                    continue;
+                }
+
+                // 인용
+                if (trimmed.startsWith('> ')) {
+                    const quoteLines = [];
+                    while (i < lines.length && lines[i].trim().startsWith('> ')) {
+                        quoteLines.push(lines[i].trim().slice(2));
+                        i++;
+                    }
+                    blocks.push(<blockquote key={`q-${key++}`}>{renderInline(quoteLines.join(' '), `q${key}`)}</blockquote>);
+                    continue;
+                }
+
+                // 마크다운 테이블
+                if (trimmed.includes('|') && (trimmed.match(/\|/g) || []).length >= 2) {
+                    const tableLines = [];
+                    while (i < lines.length && lines[i].trim().includes('|') && (lines[i].trim().match(/\|/g) || []).length >= 2) {
+                        tableLines.push(lines[i].trim());
+                        i++;
+                    }
+                    if (tableLines.length >= 2) {
+                        const headers = tableLines[0].split('|').map(c => c.trim()).filter(Boolean);
+                        let rowStart = 1;
+                        if (tableLines[1] && /^[\s|:-]+$/.test(tableLines[1])) rowStart = 2;
+                        const rows = tableLines.slice(rowStart).map(r => r.split('|').map(c => c.trim()).filter(Boolean));
+                        blocks.push(
+                            <table key={`t-${key++}`} className="md-table">
+                                <thead><tr>{headers.map((h, hi) => <th key={hi}>{renderInline(h, `th${hi}`)}</th>)}</tr></thead>
+                                <tbody>
+                                    {rows.map((row, ri) => (
+                                        <tr key={ri}>{row.map((c, ci) => <td key={ci}>{renderInline(c, `td${ri}${ci}`)}</td>)}</tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        );
+                        continue;
+                    }
+                }
+
+                // 순서 없는 리스트 (체크박스 포함)
+                if (/^[-*]\s/.test(trimmed)) {
+                    const items = [];
+                    while (i < lines.length && /^[-*]\s/.test(lines[i].trim())) {
+                        let itemText = lines[i].trim().replace(/^[-*]\s+/, '');
+                        let checkbox = null;
+                        const cbMatch = itemText.match(/^\[([ xX])\]\s*(.*)$/);
+                        if (cbMatch) {
+                            checkbox = cbMatch[1].toLowerCase() === 'x'
+                                ? <span className="checkbox-checked">☑</span>
+                                : <span className="checkbox-unchecked">☐</span>;
+                            itemText = cbMatch[2];
+                        }
+                        items.push(
+                            <li key={`li-${key++}`}>{checkbox}{renderInline(itemText, `li${key}`)}</li>
+                        );
+                        i++;
+                    }
+                    blocks.push(<ul key={`ul-${key++}`}>{items}</ul>);
+                    continue;
+                }
+
+                // 순서 있는 리스트
+                if (/^\d+\.\s/.test(trimmed)) {
+                    const items = [];
+                    while (i < lines.length && /^\d+\.\s/.test(lines[i].trim())) {
+                        const itemText = lines[i].trim().replace(/^\d+\.\s+/, '');
+                        items.push(<li key={`oli-${key++}`}>{renderInline(itemText, `oli${key}`)}</li>);
+                        i++;
+                    }
+                    blocks.push(<ol key={`ol-${key++}`}>{items}</ol>);
+                    continue;
+                }
+
+                // 일반 단락 (연속된 줄 수집)
+                const paraLines = [];
+                while (i < lines.length && lines[i].trim() !== '' &&
+                       !/^#{1,6}\s/.test(lines[i].trim()) &&
+                       !/^[-*]\s/.test(lines[i].trim()) &&
+                       !/^\d+\.\s/.test(lines[i].trim()) &&
+                       !lines[i].trim().startsWith('```') &&
+                       !lines[i].trim().startsWith('> ') &&
+                       !(lines[i].trim().includes('|') && (lines[i].trim().match(/\|/g) || []).length >= 2)) {
+                    paraLines.push(lines[i]);
+                    i++;
+                }
+                if (paraLines.length > 0) {
+                    blocks.push(<p key={`p-${key++}`}>{renderInline(paraLines.join(' '), `p${key}`)}</p>);
+                }
+            }
+
+            return <div className="md-body">{blocks}</div>;
+        };
+
+        /**
+         * QR Code 컴포넌트 - 문서 검증용
+         */
+        const QRCodeBlock = ({ data, label, size = 64 }) => {
+            const canvasRef = useRef(null);
+            useEffect(() => {
+                if (canvasRef.current && window.QRCode && data) {
+                    window.QRCode.toCanvas(canvasRef.current, data, {
+                        width: size * 2,
+                        margin: 1,
+                        color: { dark: '#0f172a', light: '#ffffff' }
+                    }, (err) => { if (err) console.error('QR error:', err); });
+                }
+            }, [data, size]);
+            return (
+                <div className="qr-block">
+                    <canvas ref={canvasRef} style={{ width: `${size}px`, height: `${size}px` }} />
+                    {label && <p style={{ fontSize: '8px', color: '#64748b', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.05em' }}>{label}</p>}
+                </div>
+            );
+        };
+
+        /**
+         * 워터마크 옵션
+         */
+        const WATERMARKS = {
+            none: { label: '없음', icon: '○', cls: '', text: '' },
+            draft: { label: '초안', icon: '✎', cls: 'wm-draft', text: 'DRAFT' },
+            confidential: { label: '대외비', icon: '⚠', cls: 'wm-confidential', text: 'CONFIDENTIAL' },
+            approved: { label: '승인됨', icon: '✓', cls: 'wm-approved', text: 'APPROVED' },
+            final: { label: '최종본', icon: '★', cls: 'wm-final', text: 'FINAL' },
+            copy: { label: '사본', icon: '⎘', cls: 'wm-copy', text: 'COPY' }
+        };
+
+        /**
          * 증권 보고서용 컨텐츠 렌더러 (테이블 자동 인식 + 개선된 분리 로직)
          */
         const SecuritiesContentRenderer = ({ content }) => {
@@ -377,7 +635,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 <div>
                     {parts.map((part, idx) => {
                         if (part.type === 'text') {
-                            return <div key={idx} className="whitespace-pre-wrap mb-4 text-gray-800 leading-relaxed">{part.content}</div>;
+                            return <div key={idx} className="mb-4"><MarkdownRenderer content={part.content} /></div>;
                         } else {
                             return (
                                 <div key={idx} className="my-6 overflow-x-auto">
@@ -552,6 +810,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
             const [savedDocs, setSavedDocs] = useLocalStorage(STORAGE_KEY, []);
             const [toast, setToast] = useState(null);
             const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+            const [watermark, setWatermark] = useState('none');
             const canvasRef = useRef(null);
             const printRef = useRef(null);
 
@@ -810,6 +1069,30 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                     )}
                                 </div>
 
+                                {/* 워터마크 선택 */}
+                                <div className="px-6 pt-4 pb-2 border-t border-[#22d3ee]/20">
+                                    <p className="text-[10px] font-bold text-[#22d3ee] uppercase tracking-widest mb-2 mono">
+                                        🔖 워터마크
+                                    </p>
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        {Object.entries(WATERMARKS).map(([key, wm]) => (
+                                            <button
+                                                key={key}
+                                                onClick={() => { setWatermark(key); setToast(`🔖 워터마크: ${wm.label}`); }}
+                                                className={`px-2 py-2 rounded border transition-all mono text-[10px] font-bold flex flex-col items-center gap-0.5 ${
+                                                    watermark === key
+                                                        ? 'bg-[#22d3ee]/15 border-[#22d3ee] text-[#22d3ee]'
+                                                        : 'bg-[#0a0e14] border-[#22d3ee]/20 text-gray-400 hover:border-[#22d3ee]/50 hover:text-gray-200'
+                                                }`}
+                                                title={wm.text || '워터마크 제거'}
+                                            >
+                                                <span className="text-sm leading-none">{wm.icon}</span>
+                                                <span>{wm.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 {/* 액션 버튼 */}
                                 <div className="p-6 border-t border-[#22d3ee]/20 space-y-2">
                                     <button
@@ -897,7 +1180,10 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                         <div ref={printRef} className="flex-1 flex justify-center items-start p-12">
                             {currentTemplate?.isSecurities ? (
                                 /* 한화투자증권 스타일 */
-                                <section className="document-canvas shadow-2xl">
+                                <section className="document-canvas shadow-2xl watermark-wrap">
+                                    {watermark !== 'none' && (
+                                        <div className={`watermark ${WATERMARKS[watermark].cls}`}>{WATERMARKS[watermark].text}</div>
+                                    )}
                                     <div className="bg-gradient-to-r from-red-700 to-red-600 px-12 py-8">
                                         <div className="flex justify-between items-center">
                                             <div>
@@ -962,9 +1248,16 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                                 <p className="text-lg font-bold text-gray-900">{currentDoc.data.author}</p>
                                                 <p className="text-xs text-gray-600 mono">research@hanwhawm.com</p>
                                             </div>
-                                            <div className="text-right text-[10px] text-gray-500 mono">
-                                                <p>Report ID: {currentDoc.id.substring(0, 8).toUpperCase()}</p>
-                                                <p>Published: {new Date().toISOString()}</p>
+                                            <div className="flex items-center gap-6">
+                                                <div className="text-right text-[10px] text-gray-500 mono">
+                                                    <p>Report ID: {currentDoc.id.substring(0, 8).toUpperCase()}</p>
+                                                    <p>Published: {new Date().toISOString()}</p>
+                                                </div>
+                                                <QRCodeBlock
+                                                    data={`HANWHA-REPORT:${currentDoc.id}:${currentDoc.data.company || ''}:${currentDoc.data.rating || ''}:${currentDoc.data.target_price || ''}`}
+                                                    label="VERIFY"
+                                                    size={64}
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -983,7 +1276,10 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                 </section>
                             ) : (
                                 /* 일반 공문서 스타일 (인장 위치 개선) */
-                                <section className="document-canvas shadow-2xl">
+                                <section className="document-canvas shadow-2xl watermark-wrap">
+                                    {watermark !== 'none' && (
+                                        <div className={`watermark ${WATERMARKS[watermark].cls}`}>{WATERMARKS[watermark].text}</div>
+                                    )}
                                     {/* 문서 헤더 */}
                                     <div className="border-b-2 border-gray-800 pb-8 mb-8 px-12 pt-12">
                                         <div className="text-center mb-8">
@@ -1033,12 +1329,10 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                         </table>
                                     </div>
 
-                                    {/* 본문 */}
+                                    {/* 본문 - 마크다운 렌더링 */}
                                     <article className="px-12 mb-16">
                                         <div className="border-2 border-gray-300 rounded-lg p-8 bg-white min-h-[400px]">
-                                            <div className="text-gray-800 leading-loose whitespace-pre-wrap text-base">
-                                                {currentDoc.data.content}
-                                            </div>
+                                            <MarkdownRenderer content={currentDoc.data.content} />
                                         </div>
                                     </article>
 
@@ -1090,7 +1384,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                     {/* 푸터 */}
                                     <footer className="absolute bottom-6 left-0 right-0 px-12">
                                         <div className="border-t-2 border-gray-300 pt-4">
-                                            <div className="grid grid-cols-3 gap-4 text-[10px] text-gray-500 mono">
+                                            <div className="grid grid-cols-4 gap-4 text-[10px] text-gray-500 mono items-center">
                                                 <div>
                                                     <p className="font-bold mb-1">문서검증번호</p>
                                                     <p>{currentDoc.id.substring(0, 16).toUpperCase()}</p>
@@ -1099,14 +1393,21 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                                     <p className="font-bold mb-1">발행시스템</p>
                                                     <p>ProDoc Enterprise v2.1</p>
                                                 </div>
-                                                <div className="text-right">
+                                                <div className="text-center">
                                                     <p className="font-bold mb-1">발행일시</p>
                                                     <p>{new Date().toLocaleString('ko-KR')}</p>
+                                                </div>
+                                                <div className="flex justify-end">
+                                                    <QRCodeBlock
+                                                        data={`PRODOC:${currentDoc.id}:${currentTemplate?.id}:${(currentDoc.data.title || '').slice(0, 32)}`}
+                                                        label="VERIFY"
+                                                        size={60}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="text-center text-[9px] text-gray-400 mt-3 mono">
-                                            <p>이 문서는 전자문서 및 전자거래 기본법에 따라 법적 효력을 가집니다.</p>
+                                            <p>이 문서는 전자문서 및 전자거래 기본법에 따라 법적 효력을 가집니다. · QR 코드로 진위 검증 가능</p>
                                         </div>
                                     </footer>
                                 </section>
