@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProDoc Engine • Enterprise Document Automation</title>
+    <title>ProDoc Engine v3.1 • Enterprise Document Automation</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -21,12 +21,37 @@
         }
        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-       
+
+        :root {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #151b24;
+            --bg-tertiary: #1f2937;
+            --accent: #22d3ee;
+            --accent-hover: #06b6d4;
+            --text-primary: #d4d4d4;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: rgba(34, 211, 238, 0.2);
+        }
+
+        body.theme-light {
+            --bg-primary: #f3f4f6;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e5e7eb;
+            --accent: #0891b2;
+            --accent-hover: #0e7490;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-muted: #9ca3af;
+            --border: rgba(8, 145, 178, 0.25);
+        }
+
         body {
-            background: #0a0e14;
-            color: #d4d4d4;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             font-family: 'JetBrains Mono', monospace;
             overflow: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
         }
         .neo-glow {
             box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
@@ -96,6 +121,35 @@
                 linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
             background-size: 20px 20px;
         }
+
+        /* Markdown rendering for general documents */
+        .md-render h1 { font-size: 1.8rem; font-weight: 800; margin: 1.2rem 0 0.6rem; color: #111827; border-bottom: 2px solid #1f2937; padding-bottom: 0.4rem; }
+        .md-render h2 { font-size: 1.4rem; font-weight: 700; margin: 1rem 0 0.5rem; color: #1f2937; border-left: 4px solid #2563eb; padding-left: 0.6rem; }
+        .md-render h3 { font-size: 1.15rem; font-weight: 700; margin: 0.85rem 0 0.4rem; color: #374151; }
+        .md-render p { margin: 0.5rem 0; line-height: 1.75; }
+        .md-render ul { list-style: disc; margin: 0.5rem 0 0.5rem 1.5rem; }
+        .md-render ol { list-style: decimal; margin: 0.5rem 0 0.5rem 1.5rem; }
+        .md-render li { margin: 0.25rem 0; line-height: 1.7; }
+        .md-render strong { font-weight: 700; color: #111827; }
+        .md-render em { font-style: italic; }
+        .md-render code.inline { background: #f3f4f6; color: #b91c1c; padding: 0.1rem 0.35rem; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+        .md-render pre { background: #1f2937; color: #f3f4f6; padding: 1rem; border-radius: 6px; margin: 0.75rem 0; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+        .md-render blockquote { border-left: 4px solid #9ca3af; padding-left: 1rem; margin: 0.75rem 0; color: #4b5563; font-style: italic; }
+        .md-render table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; }
+        .md-render th { background: #1f2937; color: #fff; padding: 0.6rem; border: 1px solid #4b5563; text-align: left; font-weight: 700; }
+        .md-render td { padding: 0.6rem; border: 1px solid #d1d5db; }
+        .md-render tr:nth-child(even) td { background: #f9fafb; }
+        .md-render hr { border: 0; border-top: 1px solid #d1d5db; margin: 1rem 0; }
+        .md-render a { color: #2563eb; text-decoration: underline; }
+
+        /* Theme transitions for sidebar */
+        .surface-1 { background: var(--bg-primary); }
+        .surface-2 { background: var(--bg-secondary); }
+        .surface-3 { background: var(--bg-tertiary); }
+        .text-1 { color: var(--text-primary); }
+        .text-2 { color: var(--text-secondary); }
+        .text-3 { color: var(--text-muted); }
+        .border-accent { border-color: var(--border); }
     </style>
 </head>
 <body>
@@ -205,6 +259,38 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
 - 주요 고객사 수주 지연 가능성
 - 환율 변동성 (달러당 ±100원 시 영업이익 8% 변동)
 - 중국 경기 둔화에 따른 수요 감소`
+            },
+            RESUME: {
+                id: 'RESUME',
+                name: '이력서',
+                icon: '👤',
+                category: 'personal',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'birth_date', 'contact'],
+                defaultContent: `## 인적사항\n- **성명**: 임채훈\n- **생년월일**: 1990.05.20\n- **연락처**: 010-1234-5678\n- **이메일**: chaehoon.lim@example.com\n\n## 학력\n- 2009.03 ~ 2013.02 서울대학교 컴퓨터공학과 학사\n- 2013.03 ~ 2015.02 KAIST 전산학 석사\n\n## 경력\n### 2020.01 ~ 현재 | (주)테크코퍼레이션 | Senior Engineer\n- 마이크로서비스 아키텍처 설계 및 구현\n- 일평균 1억건 트랜잭션 처리 시스템 개발\n- 팀 리딩 및 신입 개발자 멘토링\n\n### 2015.03 ~ 2019.12 | (주)스타트업코리아 | Software Engineer\n- React/Node.js 기반 SaaS 플랫폼 개발\n- AWS 인프라 구축 및 운영\n\n## 보유 기술\n- **언어**: TypeScript, Python, Go, Rust\n- **프레임워크**: React, Next.js, NestJS\n- **인프라**: AWS, Kubernetes, Terraform\n\n## 자격증\n- AWS Solutions Architect Professional (2023)\n- 정보처리기사 (2014)`
+            },
+            QUOTE: {
+                id: 'QUOTE',
+                name: '견적서',
+                icon: '💰',
+                category: 'business',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'quote_number', 'valid_until'],
+                defaultContent: `## 견적 내역\n\n품목 | 수량 | 단가 | 금액\n웹 서비스 개발 (3개월) | 1 | 60,000,000 | 60,000,000\nAWS 인프라 구축 | 1 | 8,000,000 | 8,000,000\n모바일 앱 개발 (iOS/Android) | 2 | 25,000,000 | 50,000,000\n유지보수 (12개월) | 1 | 24,000,000 | 24,000,000\n\n## 합계 금액\n- 공급가액: 142,000,000원\n- 부가세 (10%): 14,200,000원\n- **총 금액: 156,200,000원**\n\n## 결제 조건\n- **계약금**: 30% (계약 시)\n- **중도금**: 40% (중간 산출물 인도 시)\n- **잔금**: 30% (최종 인도 시)\n\n## 유효기간\n견적일로부터 30일 이내\n\n## 비고\n본 견적은 부가가치세를 포함하지 않은 금액입니다. 별도 협의 사항은 담당자에게 문의 바랍니다.`
+            },
+            VACATION_REQUEST: {
+                id: 'VACATION_REQUEST',
+                name: '휴가 신청서',
+                icon: '🏖️',
+                category: 'business',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'vacation_type', 'vacation_period'],
+                defaultContent: `본인은 아래와 같이 휴가를 신청하오니 허가하여 주시기 바랍니다.\n\n## 신청 내역\n- **휴가 종류**: 연차 휴가\n- **휴가 기간**: 2026년 6월 1일 ~ 2026년 6월 7일 (5일간)\n- **사용 일수**: 5일\n- **잔여 연차**: 10일\n\n## 사유\n가족과의 시간 및 휴식을 위한 연차 휴가\n\n## 업무 인수인계\n- **진행 중 프로젝트**: API 게이트웨이 마이그레이션\n- **인수인계 담당자**: 박민수 책임연구원\n- **긴급 연락처**: 010-1234-5678\n- **이메일 모니터링**: 1일 1회 (오전 9시)\n\n## 비상 대응\n긴급 장애 발생 시 원격 대응 가능 (Slack 알림 활성화)`
+            },
+            CONTRACT: {
+                id: 'CONTRACT',
+                name: '용역 계약서',
+                icon: '📜',
+                category: 'business',
+                fields: ['organization', 'recipient', 'title', 'content', 'author', 'contract_number', 'contract_amount'],
+                defaultContent: `## 계약 당사자\n- **갑 (발주자)**: 한화시스템 주식회사\n- **을 (수급자)**: (주)테크솔루션\n\n## 제1조 (계약의 목적)\n본 계약은 갑이 을에게 발주하는 클라우드 시스템 구축 용역에 관한 권리와 의무를 규정함을 목적으로 한다.\n\n## 제2조 (계약 기간)\n2026년 3월 1일부터 2026년 12월 31일까지 (10개월)\n\n## 제3조 (계약 금액)\n- **총 계약 금액**: 일금 오억원정 (₩500,000,000)\n- 부가가치세 별도\n\n## 제4조 (대금 지급)\n갑은 을에게 다음과 같이 대금을 지급한다.\n1. 착수금: 계약 체결 후 7일 이내 30%\n2. 중도금: 50% 진행 시점 40%\n3. 잔금: 검수 완료 후 30%\n\n## 제5조 (기밀유지)\n양 당사자는 본 계약의 이행 과정에서 취득한 모든 정보를 제3자에게 누설하지 않는다.\n\n## 제6조 (분쟁 해결)\n본 계약과 관련된 분쟁은 갑의 본점 소재지 관할 법원을 합의관할로 한다.\n\n## 제7조 (효력 발생)\n본 계약은 갑과 을이 서명 날인한 날로부터 효력이 발생한다.`
             }
         };
 
@@ -412,6 +498,158 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
         };
 
         // ═══════════════════════════════════════════════════════════════
+        // 📝 MARKDOWN RENDERER (일반 문서용)
+        // ═══════════════════════════════════════════════════════════════
+        const escapeHtml = (str) =>
+            str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        const renderInline = (text) => {
+            let out = escapeHtml(text);
+            out = out.replace(/`([^`]+)`/g, '<code class="inline">$1</code>');
+            out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            out = out.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+            out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+            return out;
+        };
+
+        const renderMarkdown = (text) => {
+            if (!text) return '';
+            const lines = text.split('\n');
+            const html = [];
+            let i = 0;
+            let inList = null; // 'ul' | 'ol'
+
+            const closeList = () => {
+                if (inList) { html.push(`</${inList}>`); inList = null; }
+            };
+
+            while (i < lines.length) {
+                const line = lines[i];
+                const trimmed = line.trim();
+
+                // Code block
+                if (trimmed.startsWith('```')) {
+                    closeList();
+                    const lang = trimmed.slice(3);
+                    const buf = [];
+                    i++;
+                    while (i < lines.length && !lines[i].trim().startsWith('```')) {
+                        buf.push(escapeHtml(lines[i]));
+                        i++;
+                    }
+                    i++;
+                    html.push(`<pre><code class="lang-${escapeHtml(lang)}">${buf.join('\n')}</code></pre>`);
+                    continue;
+                }
+
+                // Table (pipe-delimited, at least one |)
+                if (trimmed.includes('|') && (trimmed.match(/\|/g) || []).length >= 1 && trimmed.length > 0 && !trimmed.startsWith('#')) {
+                    // collect contiguous table rows
+                    const buf = [];
+                    let j = i;
+                    while (j < lines.length) {
+                        const t = lines[j].trim();
+                        if (t.length === 0) break;
+                        if (!t.includes('|')) break;
+                        if (t.startsWith('#') || t.startsWith('-') || t.startsWith('*')) break;
+                        buf.push(t);
+                        j++;
+                    }
+                    if (buf.length >= 2) {
+                        closeList();
+                        const splitRow = (r) => r.split('|').map(c => c.trim()).filter((c, idx, arr) => !(idx === 0 && c === '') && !(idx === arr.length - 1 && c === ''));
+                        const headers = splitRow(buf[0]);
+                        let start = 1;
+                        if (buf[1] && /^[\s|:-]+$/.test(buf[1])) start = 2;
+                        const rows = buf.slice(start).map(splitRow).filter(r => r.length > 0);
+                        if (headers.length > 0 && rows.length > 0) {
+                            html.push('<table>');
+                            html.push('<thead><tr>');
+                            headers.forEach(h => html.push(`<th>${renderInline(h)}</th>`));
+                            html.push('</tr></thead>');
+                            html.push('<tbody>');
+                            rows.forEach(r => {
+                                html.push('<tr>');
+                                for (let k = 0; k < headers.length; k++) {
+                                    html.push(`<td>${renderInline(r[k] || '')}</td>`);
+                                }
+                                html.push('</tr>');
+                            });
+                            html.push('</tbody></table>');
+                            i = j;
+                            continue;
+                        }
+                    }
+                }
+
+                // Headings
+                const hMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+                if (hMatch) {
+                    closeList();
+                    const level = hMatch[1].length;
+                    html.push(`<h${level}>${renderInline(hMatch[2])}</h${level}>`);
+                    i++;
+                    continue;
+                }
+
+                // Horizontal rule
+                if (/^[-*_]{3,}$/.test(trimmed)) {
+                    closeList();
+                    html.push('<hr/>');
+                    i++;
+                    continue;
+                }
+
+                // Blockquote
+                if (trimmed.startsWith('> ')) {
+                    closeList();
+                    const buf = [];
+                    while (i < lines.length && lines[i].trim().startsWith('> ')) {
+                        buf.push(lines[i].trim().slice(2));
+                        i++;
+                    }
+                    html.push(`<blockquote>${renderInline(buf.join(' '))}</blockquote>`);
+                    continue;
+                }
+
+                // Ordered list
+                const olMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+                if (olMatch) {
+                    if (inList !== 'ol') { closeList(); html.push('<ol>'); inList = 'ol'; }
+                    html.push(`<li>${renderInline(olMatch[2])}</li>`);
+                    i++;
+                    continue;
+                }
+
+                // Unordered list
+                if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                    if (inList !== 'ul') { closeList(); html.push('<ul>'); inList = 'ul'; }
+                    html.push(`<li>${renderInline(trimmed.slice(2))}</li>`);
+                    i++;
+                    continue;
+                }
+
+                // Empty line
+                if (trimmed.length === 0) {
+                    closeList();
+                    i++;
+                    continue;
+                }
+
+                // Paragraph
+                closeList();
+                html.push(`<p>${renderInline(trimmed)}</p>`);
+                i++;
+            }
+            closeList();
+            return html.join('\n');
+        };
+
+        const MarkdownRenderer = ({ content }) => (
+            <div className="md-render" dangerouslySetInnerHTML={{ __html: renderMarkdown(content || '') }} />
+        );
+
+        // ═══════════════════════════════════════════════════════════════
         // 📦 STATE MANAGEMENT
         // ═══════════════════════════════════════════════════════════════
         const initialState = {
@@ -424,6 +662,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
             CREATE_DOCUMENT: 'CREATE_DOCUMENT',
             UPDATE_DOCUMENT: 'UPDATE_DOCUMENT',
             DELETE_DOCUMENT: 'DELETE_DOCUMENT',
+            DUPLICATE_DOCUMENT: 'DUPLICATE_DOCUMENT',
             SELECT_DOCUMENT: 'SELECT_DOCUMENT',
             LOAD_DOCUMENTS: 'LOAD_DOCUMENTS'
         };
@@ -476,6 +715,22 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                         documents: remainingDocs,
                         currentDocId: remainingDocs.length > 0 ? remainingDocs[0].id : null
                     };
+                case actionTypes.DUPLICATE_DOCUMENT: {
+                    const source = state.documents.find(d => d.id === action.payload.id);
+                    if (!source) return state;
+                    const copy = {
+                        ...source,
+                        id: Date.now().toString(),
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        data: { ...source.data, title: `${source.data.title} (사본)` }
+                    };
+                    return {
+                        ...state,
+                        documents: [...state.documents, copy],
+                        currentDocId: copy.id
+                    };
+                }
                 case actionTypes.SELECT_DOCUMENT:
                     return {
                         ...state,
@@ -503,8 +758,8 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
             return <div className="toast no-print">{message}</div>;
         };
 
-        const StatusBar = ({ status, lastSaved }) => (
-            <div className="flex items-center gap-3 px-6 py-3 bg-[#151b24] border-t border-[#22d3ee]/20 no-print">
+        const StatusBar = ({ status, lastSaved, wordCount, charCount }) => (
+            <div className="flex items-center gap-4 px-6 py-3 bg-[#151b24] border-t border-[#22d3ee]/20 no-print">
                 <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${status === 'saved' ? 'bg-emerald-400' : 'bg-amber-400'} status-indicator`} />
                     <span className="text-xs text-gray-400 mono">
@@ -516,33 +771,88 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                         마지막 저장: {new Date(lastSaved).toLocaleTimeString('ko-KR')}
                     </span>
                 )}
+                <span className="text-xs text-gray-500 mono ml-auto">
+                    📝 {wordCount} 단어 · {charCount} 글자
+                </span>
             </div>
         );
 
-        const FieldInput = ({ label, value, onChange, type = 'text', placeholder }) => (
-            <div className="space-y-1">
-                <label className="text-[10px] font-bold text-[#22d3ee] uppercase tracking-widest block mono">
-                    {label}
-                </label>
-                {type === 'textarea' ? (
-                    <textarea
-                        className="w-full bg-[#0a0e14] border border-[#22d3ee]/30 rounded-lg p-3 text-sm text-gray-200 focus:border-[#22d3ee] focus:ring-1 focus:ring-[#22d3ee] outline-none transition-all resize-none mono"
-                        rows="12"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        placeholder={placeholder}
-                    />
-                ) : (
-                    <input
-                        type={type}
-                        className="w-full bg-[#0a0e14] border border-[#22d3ee]/30 rounded-lg p-3 text-sm text-gray-200 focus:border-[#22d3ee] focus:ring-1 focus:ring-[#22d3ee] outline-none transition-all mono"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        placeholder={placeholder}
-                    />
-                )}
-            </div>
-        );
+        const FieldInput = ({ label, value, onChange, type = 'text', placeholder, markdownToolbar = false }) => {
+            const textareaRef = useRef(null);
+            const wrap = useCallback((prefix, suffix = prefix, defaultText = '') => {
+                const el = textareaRef.current;
+                if (!el) return;
+                const start = el.selectionStart;
+                const end = el.selectionEnd;
+                const selected = value.slice(start, end) || defaultText;
+                const next = value.slice(0, start) + prefix + selected + suffix + value.slice(end);
+                onChange(next);
+                requestAnimationFrame(() => {
+                    el.focus();
+                    const pos = start + prefix.length + selected.length;
+                    el.setSelectionRange(pos, pos);
+                });
+            }, [value, onChange]);
+            const insertLine = useCallback((line) => {
+                const el = textareaRef.current;
+                if (!el) return;
+                const start = el.selectionStart;
+                const before = value.slice(0, start);
+                const needsNewline = before.length > 0 && !before.endsWith('\n');
+                const prefix = needsNewline ? '\n' : '';
+                const next = before + prefix + line + '\n' + value.slice(start);
+                onChange(next);
+                requestAnimationFrame(() => {
+                    el.focus();
+                    const pos = start + prefix.length + line.length + 1;
+                    el.setSelectionRange(pos, pos);
+                });
+            }, [value, onChange]);
+
+            const btn = "px-2 py-1 text-[10px] bg-[#151b24] hover:bg-[#22d3ee] hover:text-[#0a0e14] text-gray-400 border border-[#22d3ee]/20 rounded transition-colors mono";
+
+            return (
+                <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-[#22d3ee] uppercase tracking-widest block mono">
+                        {label}
+                    </label>
+                    {type === 'textarea' ? (
+                        <>
+                            {markdownToolbar && (
+                                <div className="flex flex-wrap gap-1 mb-1">
+                                    <button type="button" className={btn} onClick={() => insertLine('## 제목')} title="H2">H2</button>
+                                    <button type="button" className={btn} onClick={() => insertLine('### 소제목')} title="H3">H3</button>
+                                    <button type="button" className={btn} onClick={() => wrap('**', '**', '굵게')} title="Bold"><b>B</b></button>
+                                    <button type="button" className={btn} onClick={() => wrap('*', '*', '기울임')} title="Italic"><i>I</i></button>
+                                    <button type="button" className={btn} onClick={() => insertLine('- 항목')} title="List">• List</button>
+                                    <button type="button" className={btn} onClick={() => insertLine('1. 항목')} title="Numbered">1. List</button>
+                                    <button type="button" className={btn} onClick={() => wrap('`', '`', 'code')} title="Inline code">{`{ }`}</button>
+                                    <button type="button" className={btn} onClick={() => insertLine('```\ncode\n```')} title="Code block">▤</button>
+                                    <button type="button" className={btn} onClick={() => insertLine('> 인용문')} title="Quote">❝</button>
+                                    <button type="button" className={btn} onClick={() => insertLine('구분 | 값 | 비고\n---|---|---\n항목1 | 100 | 메모')} title="Table">▦</button>
+                                </div>
+                            )}
+                            <textarea
+                                ref={textareaRef}
+                                className="w-full bg-[#0a0e14] border border-[#22d3ee]/30 rounded-lg p-3 text-sm text-gray-200 focus:border-[#22d3ee] focus:ring-1 focus:ring-[#22d3ee] outline-none transition-all resize-none mono"
+                                rows="12"
+                                value={value}
+                                onChange={(e) => onChange(e.target.value)}
+                                placeholder={placeholder}
+                            />
+                        </>
+                    ) : (
+                        <input
+                            type={type}
+                            className="w-full bg-[#0a0e14] border border-[#22d3ee]/30 rounded-lg p-3 text-sm text-gray-200 focus:border-[#22d3ee] focus:ring-1 focus:ring-[#22d3ee] outline-none transition-all mono"
+                            value={value}
+                            onChange={(e) => onChange(e.target.value)}
+                            placeholder={placeholder}
+                        />
+                    )}
+                </div>
+            );
+        };
 
         // ═══════════════════════════════════════════════════════════════
         // 🏗️ MAIN APPLICATION (보완 완료)
@@ -550,10 +860,22 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
         const ProDocEngine = () => {
             const [state, dispatch] = useReducer(documentReducer, initialState);
             const [savedDocs, setSavedDocs] = useLocalStorage(STORAGE_KEY, []);
+            const [theme, setTheme] = useLocalStorage('prodoc_theme', 'dark');
             const [toast, setToast] = useState(null);
             const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+            const [searchQuery, setSearchQuery] = useState('');
+            const [categoryFilter, setCategoryFilter] = useState('all');
             const canvasRef = useRef(null);
             const printRef = useRef(null);
+            const fileInputRef = useRef(null);
+
+            useEffect(() => {
+                document.body.classList.toggle('theme-light', theme === 'light');
+            }, [theme]);
+
+            const toggleTheme = useCallback(() => {
+                setTheme(t => t === 'dark' ? 'light' : 'dark');
+            }, [setTheme]);
 
             // 초기 로드
             useEffect(() => {
@@ -609,6 +931,37 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 setToast('🗑️ 문서가 삭제되었습니다');
             }, [state.documents.length]);
 
+            const duplicateDocument = useCallback((id) => {
+                if (!id) return;
+                dispatch({ type: actionTypes.DUPLICATE_DOCUMENT, payload: { id } });
+                setToast('📑 문서가 복제되었습니다');
+            }, []);
+
+            const filteredDocs = useMemo(() => {
+                const q = searchQuery.trim().toLowerCase();
+                return state.documents.filter(d => {
+                    const tmpl = TEMPLATES[d.templateId];
+                    if (categoryFilter !== 'all' && tmpl?.category !== categoryFilter) return false;
+                    if (!q) return true;
+                    return (d.data.title || '').toLowerCase().includes(q)
+                        || (d.data.content || '').toLowerCase().includes(q)
+                        || (tmpl?.name || '').toLowerCase().includes(q);
+                });
+            }, [state.documents, searchQuery, categoryFilter]);
+
+            const availableCategories = useMemo(() => {
+                const set = new Set(state.documents.map(d => TEMPLATES[d.templateId]?.category).filter(Boolean));
+                return ['all', ...Array.from(set)];
+            }, [state.documents]);
+
+            const { wordCount, charCount } = useMemo(() => {
+                const text = currentDoc?.data?.content || '';
+                return {
+                    wordCount: text.trim() ? text.trim().split(/\s+/).length : 0,
+                    charCount: text.length
+                };
+            }, [currentDoc]);
+
             // PDF 내보내기
             const exportToPDF = useCallback(() => {
                 if (!printRef.current) return;
@@ -629,7 +982,9 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 });
             }, [currentDoc]);
 
-            // 인장 렌더링 (더 선명하게)
+            // 인장 렌더링 (커스터마이징 가능)
+            const sealName = currentDoc?.data?.seal_name || '임채훈';
+            const sealTitle = currentDoc?.data?.seal_title || 'DIRECTOR';
             const renderSeal = useCallback(() => {
                 const canvas = canvasRef.current;
                 if (!canvas) return;
@@ -661,12 +1016,14 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                 ctx.fillStyle = '#dc2626';
                 ctx.textAlign = 'center';
                 ctx.font = 'bold 14px JetBrains Mono';
-                ctx.fillText('DIRECTOR', 100, 78);
-                ctx.font = 'bold 32px serif';
-                ctx.fillText('임채훈', 100, 118);
+                ctx.fillText((sealTitle || '').toUpperCase().slice(0, 12), 100, 78);
+                const nameChars = (sealName || '').trim();
+                const nameFontSize = nameChars.length <= 3 ? 32 : nameChars.length <= 4 ? 26 : 22;
+                ctx.font = `bold ${nameFontSize}px serif`;
+                ctx.fillText(nameChars.slice(0, 6), 100, 118);
                 ctx.font = 'bold 12px JetBrains Mono';
                 ctx.fillText('印', 100, 140);
-            }, []);
+            }, [sealName, sealTitle]);
 
             useEffect(() => { renderSeal(); }, [renderSeal]);
 
@@ -679,6 +1036,14 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
             useKeyboardShortcut(() => {
                 window.print();
             }, ['p']);
+
+            useKeyboardShortcut(() => {
+                if (currentDoc) duplicateDocument(currentDoc.id);
+            }, ['d']);
+
+            useKeyboardShortcut(() => {
+                toggleTheme();
+            }, ['j']);
 
             if (!currentDoc) {
                 return (
@@ -702,16 +1067,27 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                     {!sidebarCollapsed && (
                                         <div>
                                             <h1 className="font-black text-[#22d3ee] tracking-tight display text-lg">PRODOC</h1>
-                                            <p className="text-[9px] text-gray-500 mono">Enterprise v2.1</p>
+                                            <p className="text-[9px] text-gray-500 mono">Enterprise v3.1</p>
                                         </div>
                                     )}
                                 </div>
-                                <button
-                                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                                    className="text-gray-400 hover:text-[#22d3ee] transition-colors"
-                                >
-                                    {sidebarCollapsed ? '→' : '←'}
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    {!sidebarCollapsed && (
+                                        <button
+                                            onClick={toggleTheme}
+                                            title="테마 전환 (Ctrl+J)"
+                                            className="text-gray-400 hover:text-[#22d3ee] transition-colors text-sm"
+                                        >
+                                            {theme === 'dark' ? '☀️' : '🌙'}
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                                        className="text-gray-400 hover:text-[#22d3ee] transition-colors"
+                                    >
+                                        {sidebarCollapsed ? '→' : '←'}
+                                    </button>
+                                </div>
                             </div>
                             {!sidebarCollapsed && (
                                 <select
@@ -733,11 +1109,37 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                             <>
                                 {/* 문서 목록 */}
                                 <div className="px-4 py-3 border-b border-[#22d3ee]/20">
-                                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-2 mono">
-                                        문서 목록 ({state.documents.length})
-                                    </p>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mono">
+                                            문서 목록 ({filteredDocs.length}/{state.documents.length})
+                                        </p>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="🔎 제목·내용·종류 검색..."
+                                        className="w-full bg-[#0a0e14] border border-[#22d3ee]/20 rounded-md px-2 py-1.5 text-[11px] text-gray-200 placeholder-gray-600 focus:border-[#22d3ee] outline-none mb-2 mono"
+                                    />
+                                    <div className="flex flex-wrap gap-1 mb-2">
+                                        {availableCategories.map(cat => (
+                                            <button
+                                                key={cat}
+                                                onClick={() => setCategoryFilter(cat)}
+                                                className={`px-2 py-0.5 text-[9px] mono rounded-full border transition-colors ${
+                                                    categoryFilter === cat
+                                                        ? 'bg-[#22d3ee] text-[#0a0e14] border-[#22d3ee]'
+                                                        : 'bg-transparent text-gray-400 border-[#22d3ee]/20 hover:border-[#22d3ee]/60'
+                                                }`}
+                                            >
+                                                {cat === 'all' ? '전체' : cat}
+                                            </button>
+                                        ))}
+                                    </div>
                                     <div className="space-y-1 max-h-32 overflow-y-auto">
-                                        {state.documents.map((doc) => (
+                                        {filteredDocs.length === 0 ? (
+                                            <p className="text-[10px] text-gray-600 mono text-center py-3">검색 결과 없음</p>
+                                        ) : filteredDocs.map((doc) => (
                                             <div
                                                 key={doc.id}
                                                 className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all ${
@@ -747,10 +1149,10 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                                 }`}
                                                 onClick={() => dispatch({ type: actionTypes.SELECT_DOCUMENT, payload: { id: doc.id } })}
                                             >
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-2 min-w-0">
                                                     <span className="text-sm">{TEMPLATES[doc.templateId].icon}</span>
-                                                    <div>
-                                                        <p className="text-xs text-gray-200 mono truncate max-w-[200px]">
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs text-gray-200 mono truncate max-w-[180px]">
                                                             {doc.data.title}
                                                         </p>
                                                         <p className="text-[9px] text-gray-500 mono">
@@ -758,17 +1160,29 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                                         </p>
                                                     </div>
                                                 </div>
-                                                {state.documents.length > 1 && (
+                                                <div className="flex items-center gap-1 shrink-0">
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            deleteDocument(doc.id);
+                                                            duplicateDocument(doc.id);
                                                         }}
-                                                        className="text-gray-500 hover:text-red-400 text-xs"
+                                                        title="복제 (Ctrl+D)"
+                                                        className="text-gray-500 hover:text-[#22d3ee] text-xs"
                                                     >
-                                                        ✕
+                                                        ⎘
                                                     </button>
-                                                )}
+                                                    {state.documents.length > 1 && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                deleteDocument(doc.id);
+                                                            }}
+                                                            className="text-gray-500 hover:text-red-400 text-xs"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -795,7 +1209,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                                 <FieldInput label="목표주가" value={currentDoc.data.target_price || ''} onChange={(v) => updateField('target_price', v)} placeholder="85,000" />
                                             </div>
                                             <FieldInput label="현재주가" value={currentDoc.data.current_price || ''} onChange={(v) => updateField('current_price', v)} placeholder="68,500" />
-                                            <FieldInput label="분석 내용" type="textarea" value={currentDoc.data.content || ''} onChange={(v) => updateField('content', v)} placeholder="투자 의견, 재무 분석, 리스크 요인 등을 작성하세요..." />
+                                            <FieldInput label="분석 내용" type="textarea" markdownToolbar value={currentDoc.data.content || ''} onChange={(v) => updateField('content', v)} placeholder="투자 의견, 재무 분석, 리스크 요인 등을 작성하세요..." />
                                             <FieldInput label="애널리스트" value={currentDoc.data.author || ''} onChange={(v) => updateField('author', v)} placeholder="예: 임채훈 수석 애널리스트" />
                                         </>
                                     ) : (
@@ -804,8 +1218,12 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                             <FieldInput label="조직/기관명" value={currentDoc.data.organization || ''} onChange={(v) => updateField('organization', v)} placeholder="예: 한국기술교육원" />
                                             <FieldInput label="수신자" value={currentDoc.data.recipient || ''} onChange={(v) => updateField('recipient', v)} placeholder="예: 홍길동 책임연구원" />
                                             <FieldInput label="문서 제목" value={currentDoc.data.title || ''} onChange={(v) => updateField('title', v)} placeholder="예: 2025년 상반기 교육과정 안내" />
-                                            <FieldInput label="본문 내용" type="textarea" value={currentDoc.data.content || ''} onChange={(v) => updateField('content', v)} placeholder="본문 내용을 입력하세요..." />
+                                            <FieldInput label="본문 내용" type="textarea" markdownToolbar value={currentDoc.data.content || ''} onChange={(v) => updateField('content', v)} placeholder="본문 내용을 입력하세요..." />
                                             <FieldInput label="발신자 (서명)" value={currentDoc.data.author || ''} onChange={(v) => updateField('author', v)} placeholder="예: 임채훈 원장" />
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <FieldInput label="인장 이름" value={currentDoc.data.seal_name || ''} onChange={(v) => updateField('seal_name', v)} placeholder="임채훈" />
+                                                <FieldInput label="인장 직함" value={currentDoc.data.seal_title || ''} onChange={(v) => updateField('seal_title', v)} placeholder="DIRECTOR" />
+                                            </div>
                                         </>
                                     )}
                                 </div>
@@ -825,10 +1243,11 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                         🖨️ 인쇄 / PDF 저장 (Ctrl+P)
                                     </button>
 
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="grid grid-cols-4 gap-2">
                                         <button
                                             onClick={() => {
-                                                const dataStr = JSON.stringify(currentDoc.data, null, 2);
+                                                const payload = { __prodoc: '1', templateId: currentDoc.templateId, data: currentDoc.data };
+                                                const dataStr = JSON.stringify(payload, null, 2);
                                                 const blob = new Blob([dataStr], { type: 'application/json' });
                                                 const url = URL.createObjectURL(blob);
                                                 const a = document.createElement('a');
@@ -839,7 +1258,13 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                             }}
                                             className="bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-2 px-3 rounded-lg border border-[#22d3ee]/30 transition-all mono text-xs"
                                         >
-                                            📦 JSON
+                                            📦 JSON ↓
+                                        </button>
+                                        <button
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-2 px-3 rounded-lg border border-[#22d3ee]/30 transition-all mono text-xs"
+                                        >
+                                            📥 JSON ↑
                                         </button>
                                         <button
                                             onClick={() => {
@@ -856,7 +1281,46 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                         >
                                             📝 TXT
                                         </button>
+                                        <button
+                                            onClick={() => {
+                                                const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(currentDoc.data.title || 'document')}</title><style>body{font-family:'Crimson Pro',serif;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.7;color:#111}h1{border-bottom:2px solid #333;padding-bottom:.4rem}h2{border-left:4px solid #2563eb;padding-left:.6rem}pre{background:#1f2937;color:#f3f4f6;padding:1rem;border-radius:6px;overflow-x:auto}code{background:#f3f4f6;color:#b91c1c;padding:.1rem .3rem;border-radius:3px}table{border-collapse:collapse;width:100%}th{background:#1f2937;color:#fff;padding:.5rem;border:1px solid #4b5563;text-align:left}td{padding:.5rem;border:1px solid #d1d5db}blockquote{border-left:4px solid #9ca3af;padding-left:1rem;color:#4b5563;font-style:italic}</style></head><body><h1>${escapeHtml(currentDoc.data.title || '')}</h1>${renderMarkdown(currentDoc.data.content || '')}</body></html>`;
+                                                const blob = new Blob([html], { type: 'text/html' });
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = `${currentDoc.data.title || 'document'}.html`;
+                                                a.click();
+                                                setToast('🌐 HTML 내보내기 완료');
+                                            }}
+                                            className="bg-[#151b24] hover:bg-[#1f2937] text-[#22d3ee] font-bold py-2 px-3 rounded-lg border border-[#22d3ee]/30 transition-all mono text-xs"
+                                        >
+                                            🌐 HTML
+                                        </button>
                                     </div>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="application/json,.json"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            const reader = new FileReader();
+                                            reader.onload = (ev) => {
+                                                try {
+                                                    const parsed = JSON.parse(ev.target.result);
+                                                    const templateId = (parsed.templateId && TEMPLATES[parsed.templateId]) ? parsed.templateId : currentDoc.templateId;
+                                                    const data = parsed.data || parsed;
+                                                    dispatch({ type: actionTypes.CREATE_DOCUMENT, payload: { templateId, initialData: data } });
+                                                    setToast('📥 JSON 가져오기 완료');
+                                                } catch (err) {
+                                                    setToast('❌ JSON 형식 오류');
+                                                }
+                                                e.target.value = '';
+                                            };
+                                            reader.readAsText(file);
+                                        }}
+                                    />
 
                                     <button
                                         onClick={() => {
@@ -870,9 +1334,12 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
 
                                     {/* Quick Templates */}
                                     <div className="border-t border-[#22d3ee]/20 pt-3 mt-3">
-                                        <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-2 mono">Quick Templates</p>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <p className="text-[9px] text-gray-500 uppercase tracking-wider mono">Quick Templates</p>
+                                            <p className="text-[8px] text-gray-600 mono">⌘S 저장 · ⌘D 복제 · ⌘J 테마</p>
+                                        </div>
                                         <div className="grid grid-cols-4 gap-1">
-                                            {Object.entries(TEMPLATES).slice(0, 8).map(([key, tmpl]) => (
+                                            {Object.entries(TEMPLATES).map(([key, tmpl]) => (
                                                 <button
                                                     key={key}
                                                     onClick={() => createNewDocument(key)}
@@ -893,7 +1360,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                     </aside>
 
                     {/* 메인 프리뷰 */}
-                    <main className="flex-1 bg-[#0d1117] overflow-y-auto flex flex-col print-area">
+                    <main className={`flex-1 ${theme === 'light' ? 'bg-gray-200' : 'bg-[#0d1117]'} overflow-y-auto flex flex-col print-area transition-colors`}>
                         <div ref={printRef} className="flex-1 flex justify-center items-start p-12">
                             {currentTemplate?.isSecurities ? (
                                 /* 한화투자증권 스타일 */
@@ -1036,8 +1503,8 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                     {/* 본문 */}
                                     <article className="px-12 mb-16">
                                         <div className="border-2 border-gray-300 rounded-lg p-8 bg-white min-h-[400px]">
-                                            <div className="text-gray-800 leading-loose whitespace-pre-wrap text-base">
-                                                {currentDoc.data.content}
+                                            <div className="text-gray-800 leading-loose text-base">
+                                                <MarkdownRenderer content={currentDoc.data.content} />
                                             </div>
                                         </div>
                                     </article>
@@ -1097,7 +1564,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                                 </div>
                                                 <div className="text-center">
                                                     <p className="font-bold mb-1">발행시스템</p>
-                                                    <p>ProDoc Enterprise v2.1</p>
+                                                    <p>ProDoc Enterprise v3.1</p>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="font-bold mb-1">발행일시</p>
@@ -1112,7 +1579,7 @@ EPS (원) | 3,825 | 4,590 | 7,363 | 9,206
                                 </section>
                             )}
                         </div>
-                        <StatusBar status="saved" lastSaved={state.lastSaved} />
+                        <StatusBar status="saved" lastSaved={state.lastSaved} wordCount={wordCount} charCount={charCount} />
                     </main>
 
                     {toast && <Toast message={toast} onClose={() => setToast(null)} />}
